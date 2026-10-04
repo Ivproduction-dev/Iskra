@@ -16,7 +16,9 @@ public partial class MainWindow
         }
 
         showingObjects = false;
+        showingDetail = false;
         activeScene = null;
+        StopDetailMedia();
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = "Список сцен";
@@ -25,6 +27,7 @@ public partial class MainWindow
         WorkspaceMenuButton.Visibility = Visibility.Visible;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
+        CreateProjectButton.Visibility = Visibility.Visible;
         UpdateFloatingCreateButton();
         BuildSceneList();
     }

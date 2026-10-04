@@ -318,6 +318,43 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         return Path.Combine(directory, objectId.ToString("N") + ".isk");
     }
 
+    public string GetObjectResourceDirectory(IskraProject project, IskraScene scene, Guid objectId, string resourceType)
+    {
+        var directory = Path.Combine(projectStore.GetProjectDirectoryFor(project), resourceType, SceneDirectoryName(scene), objectId.ToString("N"));
+        Directory.CreateDirectory(directory);
+        return directory;
+    }
+
+    public static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+        { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp" };
+
+    public static readonly HashSet<string> AudioExtensions = new(StringComparer.OrdinalIgnoreCase)
+        { ".mp3", ".m4a", ".wav", ".ogg", ".wma", ".flac" };
+
+    public static string? FindFirstPreviewImage(string spritesDirectory)
+    {
+        if (!Directory.Exists(spritesDirectory))
+        {
+            return null;
+        }
+        return Directory.EnumerateFiles(spritesDirectory)
+            .Where(path => ImageExtensions.Contains(Path.GetExtension(path)))
+            .OrderBy(Path.GetFileName, StringComparer.CurrentCultureIgnoreCase)
+            .FirstOrDefault();
+    }
+
+    public static List<string> ListResourceFiles(string directory, HashSet<string> extensions)
+    {
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+        return Directory.EnumerateFiles(directory)
+            .Where(path => extensions.Contains(Path.GetExtension(path)))
+            .OrderBy(Path.GetFileName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
     public string ReadObjectScript(IskraProject project, IskraScene scene, Guid objectId)
     {
         var path = GetObjectScriptPath(project, scene, objectId);

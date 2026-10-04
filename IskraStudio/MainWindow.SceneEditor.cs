@@ -1,8 +1,11 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace IskraStudio;
 
@@ -17,6 +20,8 @@ public partial class MainWindow
 
         activeScene = scene;
         showingObjects = true;
+        showingDetail = false;
+        StopDetailMedia();
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = scene.Name;
@@ -25,6 +30,7 @@ public partial class MainWindow
         WorkspaceMenuButton.Visibility = Visibility.Visible;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
+        CreateProjectButton.Visibility = Visibility.Visible;
         UpdateFloatingCreateButton();
         BuildObjectList();
     }
@@ -101,7 +107,17 @@ public partial class MainWindow
         WorkspaceContentHost.Children.Add(scrollViewer);
     }
 
-    private UIElement CreateBackgroundRow() => CreateEntryRow("Фон", null, "Фон сцены");
+    private UIElement CreateBackgroundRow()
+    {
+        var background = new IskraObject { Id = IskraObject.BackgroundId, Name = "Фон" };
+        return CreateEntryRow("Фон", null, "Фон сцены", FindObjectPreviewPath(background.Id), () =>
+        {
+            if (activeScene is not null)
+            {
+                ShowObjectDetail(activeScene, background);
+            }
+        });
+    }
 
     private UIElement CreateObjectRow(IskraObject item)
     {
@@ -118,10 +134,63 @@ public partial class MainWindow
         };
         actionsButton.Click += EntryActions_Click;
         AutomationProperties.SetName(actionsButton, $"Действия с объектом {item.Name}");
-        return CreateEntryRow(item.Name, actionsButton, $"Объект {item.Name}");
+        return CreateEntryRow(item.Name, actionsButton, $"Объект {item.Name}", FindObjectPreviewPath(item.Id), () =>
+        {
+            if (activeScene is not null)
+            {
+                ShowObjectDetail(activeScene, item);
+            }
+        });
     }
 
-    private UIElement CreateEntryRow(string name, Button? actionsButton, string automationName)
+    private string? FindObjectPreviewPath(Guid objectId)
+    {
+        if (activeProject is null || activeScene is null)
+        {
+            return null;
+        }
+        var directory = projectContentStore.GetObjectResourceDirectory(activeProject, activeScene, objectId, "sprites");
+        return ProjectContentStore.FindFirstPreviewImage(directory);
+    }
+
+    private static ImageSource? LoadPreviewImage(string? path)
+    {
+        if (path is null)
+        {
+            return null;
+        }
+        try
+        {
+            var image = new BitmapImage();
+            image.BeginInit();
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.DecodePixelWidth = 192;
+            image.UriSource = new Uri(path, UriKind.Absolute);
+            image.EndInit();
+            image.Freeze();
+            return image;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            return null;
+        }
+    }
+
+    private static Button? FindButtonAncestor(DependencyObject? source)
+    {
+        var current = source;
+        while (current is not null)
+        {
+            if (current is Button button)
+            {
+                return button;
+            }
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return null;
+    }
+
+    private UIElement CreateEntryRow(string name, Button? actionsButton, string automationName, string? previewPath, Action? open)
     {
         var row = new Border
         {
@@ -145,14 +214,17 @@ public partial class MainWindow
             Height = 96,
             CornerRadius = new CornerRadius(10),
             Background = BrushFor("SoftBrush"),
-            Child = new TextBlock
-            {
-                Text = "◇",
-                FontSize = 46,
-                Foreground = BrushFor("AccentBrush"),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            }
+            ClipToBounds = true,
+            Child = LoadPreviewImage(previewPath) is { } preview
+                ? new Image { Source = preview, Stretch = Stretch.UniformToFill }
+                : (UIElement)new TextBlock
+                {
+                    Text = "◇",
+                    FontSize = 46,
+                    Foreground = BrushFor("AccentBrush"),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
         });
         var nameBlock = new TextBlock
         {
@@ -171,6 +243,18 @@ public partial class MainWindow
         }
         row.Child = layout;
         AutomationProperties.SetName(row, automationName);
+        if (open is not null)
+        {
+            row.Cursor = Cursors.Hand;
+            row.MouseLeftButtonUp += (_, e) =>
+            {
+                if (FindButtonAncestor(e.OriginalSource as DependencyObject) is not null)
+                {
+                    return;
+                }
+                open();
+            };
+        }
         return row;
     }
 

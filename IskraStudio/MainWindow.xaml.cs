@@ -417,6 +417,7 @@ public partial class MainWindow : Window
         }
 
         activeProject = project;
+        StopDetailMedia();
         RefreshProjectViews();
         LibraryView.Visibility = Visibility.Collapsed;
         ProjectListView.Visibility = Visibility.Collapsed;
@@ -427,6 +428,12 @@ public partial class MainWindow : Window
 
     private void BackToProjects_Click(object sender, RoutedEventArgs e)
     {
+        if (WorkspaceView.Visibility == Visibility.Visible && showingDetail && activeScene is not null)
+        {
+            ShowObjectListPage(activeScene);
+            return;
+        }
+
         if (WorkspaceView.Visibility == Visibility.Visible && showingObjects)
         {
             ShowSceneListPage();
