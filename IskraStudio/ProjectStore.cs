@@ -66,6 +66,11 @@ public sealed class ProjectStore
 
         foreach (var projectDirectory in Directory.EnumerateDirectories(projectsDirectory))
         {
+            if (Path.GetFileName(projectDirectory).StartsWith('.'))
+            {
+                continue;
+            }
+
             var metadataPath = Path.Combine(projectDirectory, "project.iskra.json");
             if (!File.Exists(metadataPath))
             {
@@ -169,6 +174,12 @@ public sealed class ProjectStore
         {
             project = null;
             error = "Нет доступа к папке проектов.";
+            return false;
+        }
+        catch (InvalidDataException)
+        {
+            project = null;
+            error = "Данные нового проекта некорректны.";
             return false;
         }
     }
@@ -340,6 +351,57 @@ public sealed class ProjectStore
         }
 
         return directory;
+    }
+
+    internal void SweepLeftoverOperations()
+    {
+        try
+        {
+            Directory.CreateDirectory(projectsDirectory);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            AppLog.Write("Не удалось открыть папку проектов при зачистке.", exception);
+            return;
+        }
+
+        foreach (var directory in Directory.EnumerateDirectories(projectsDirectory))
+        {
+            var name = Path.GetFileName(directory);
+            try
+            {
+                if (name.StartsWith(".import-", StringComparison.Ordinal))
+                {
+                    Directory.Delete(directory, recursive: true);
+                }
+                else if (name.StartsWith(".delete-", StringComparison.Ordinal))
+                {
+                    ProjectContentStore.RestoreStagedDeletions(directory);
+                }
+                else if (!name.StartsWith('.'))
+                {
+                    foreach (var staging in Directory.EnumerateDirectories(directory, ".delete-*"))
+                    {
+                        ProjectContentStore.RestoreStagedDeletions(staging);
+                    }
+                    foreach (var temporary in Directory.EnumerateFiles(directory, "*.tmp"))
+                    {
+                        try
+                        {
+                            File.Delete(temporary);
+                        }
+                        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                        {
+                            AppLog.Write($"Не удалось удалить временный файл «{Path.GetFileName(temporary)}».", exception);
+                        }
+                    }
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                AppLog.Write($"Не удалось зачистить «{name}».", exception);
+            }
+        }
     }
 
     internal string GetProjectDirectoryFor(IskraProject project) => GetProjectDirectory(project.Name);

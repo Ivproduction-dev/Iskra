@@ -57,7 +57,8 @@ public sealed class ProjectArchiveService(ProjectStore projectStore)
         }
 
         var manifest = new ProjectArchiveManifest(CurrentFormatVersion, files);
-        var temporaryDestination = destination + $".{Guid.NewGuid():N}.tmp";
+        var stagingRoot = Path.GetTempPath();
+        var temporaryDestination = Path.Combine(stagingRoot, $"iskra-export-{Guid.NewGuid():N}.tmp");
         try
         {
             using (var output = new FileStream(temporaryDestination, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))

@@ -1,9 +1,15 @@
 using System.IO;
+using System.Text.Json;
 
 namespace IskraStudio;
 
 public sealed class ProjectContentStore(ProjectStore projectStore)
 {
+    private static readonly JsonSerializerOptions StagingJsonOptions = new();
+
+    private sealed record StagedMove(string Original, string Current);
+
+    private sealed record StagingManifest(List<StagedMove> Moves, bool Committed);
     public bool TryCreateScene(IskraProject project, string inputName, out IskraScene? scene, out string? error)
     {
         scene = null;
@@ -49,7 +55,14 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             project.Scenes.Remove(created);
-            DeleteSceneDirectories(project, created);
+            try
+            {
+                DeleteSceneDirectories(project, created);
+            }
+            catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
+            {
+                AppLog.Write("Не удалось убрать папки несозданной сцены.", cleanupException);
+            }
             error = "Не удалось создать сцену. Проверьте доступ к папке проекта.";
             return false;
         }
@@ -108,23 +121,31 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         var staging = Path.Combine(root, $".delete-{Guid.NewGuid():N}");
         var moved = new List<(string Original, string Current)>();
         var originalScenes = project.Scenes.ToList();
+        var planned = new List<StagedMove>();
+        foreach (var scene in deleting)
+        {
+            foreach (var resourceType in new[] { "sounds", "sprites", "scripts" })
+            {
+                var relative = Path.Combine(resourceType, SceneDirectoryName(scene));
+                if (!Directory.Exists(Path.Combine(root, relative)))
+                {
+                    continue;
+                }
+                planned.Add(new StagedMove(relative, relative));
+            }
+        }
+
         try
         {
-            foreach (var scene in deleting)
+            Directory.CreateDirectory(staging);
+            WriteStagingManifest(staging, planned, committed: false);
+            foreach (var move in planned)
             {
-                foreach (var resourceType in new[] { "sounds", "sprites", "scripts" })
-                {
-                    var source = Path.Combine(root, resourceType, SceneDirectoryName(scene));
-                    if (!Directory.Exists(source))
-                    {
-                        continue;
-                    }
-
-                    var destination = Path.Combine(staging, resourceType, SceneDirectoryName(scene));
-                    Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-                    Directory.Move(source, destination);
-                    moved.Add((source, destination));
-                }
+                var source = Path.Combine(root, move.Original);
+                var destination = Path.Combine(staging, move.Current);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                Directory.Move(source, destination);
+                moved.Add((source, destination));
             }
 
         }
@@ -154,6 +175,16 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
             }
             error = "Не удалось сохранить изменения после удаления сцен.";
             return false;
+        }
+
+        try
+        {
+            WriteStagingManifest(staging, planned, committed: true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            TryDeleteFile(StagingManifestPath(staging));
+            AppLog.Write("Не удалось пометить временную папку удаления как завершённую.", exception);
         }
 
         try
@@ -242,27 +273,39 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         var stagedPaths = new List<(string Original, string Current)>();
         var staging = Path.Combine(root, $".delete-{Guid.NewGuid():N}");
         var objectIndex = scene.Objects.IndexOf(item);
+        var planned = new List<StagedMove>();
+        foreach (var resourceType in new[] { "sounds", "sprites" })
+        {
+            var relative = Path.Combine(resourceType, SceneDirectoryName(scene), item.Id.ToString("N"));
+            if (Directory.Exists(Path.Combine(root, relative)))
+            {
+                planned.Add(new StagedMove(relative, Path.Combine(resourceType, item.Id.ToString("N"))));
+            }
+        }
+        var scriptRelative = Path.Combine("scripts", SceneDirectoryName(scene), item.Id.ToString("N") + ".isk");
+        if (File.Exists(Path.Combine(root, scriptRelative)))
+        {
+            planned.Add(new StagedMove(scriptRelative, Path.Combine("scripts", item.Id.ToString("N") + ".isk")));
+        }
+
         try
         {
-            foreach (var resourceType in new[] { "sounds", "sprites" })
+            Directory.CreateDirectory(staging);
+            WriteStagingManifest(staging, planned, committed: false);
+            foreach (var move in planned)
             {
-                var source = Path.Combine(root, resourceType, SceneDirectoryName(scene), item.Id.ToString("N"));
+                var source = Path.Combine(root, move.Original);
+                var destination = Path.Combine(staging, move.Current);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 if (Directory.Exists(source))
                 {
-                    var destination = Path.Combine(staging, resourceType, item.Id.ToString("N"));
-                    Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                     Directory.Move(source, destination);
-                    stagedPaths.Add((source, destination));
                 }
-            }
-
-            var scriptSource = Path.Combine(root, "scripts", SceneDirectoryName(scene), item.Id.ToString("N") + ".isk");
-            if (File.Exists(scriptSource))
-            {
-                var scriptDestination = Path.Combine(staging, "scripts", item.Id.ToString("N") + ".isk");
-                Directory.CreateDirectory(Path.GetDirectoryName(scriptDestination)!);
-                File.Move(scriptSource, scriptDestination);
-                stagedPaths.Add((scriptSource, scriptDestination));
+                else
+                {
+                    File.Move(source, destination);
+                }
+                stagedPaths.Add((source, destination));
             }
 
         }
@@ -295,6 +338,16 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
             }
             error = "Не удалось сохранить изменения после удаления объекта.";
             return false;
+        }
+
+        try
+        {
+            WriteStagingManifest(staging, planned, committed: true);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            TryDeleteFile(StagingManifestPath(staging));
+            AppLog.Write("Не удалось пометить временную папку удаления как завершённую.", exception);
         }
 
         try
@@ -421,6 +474,97 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         }
     }
 
+    private static string StagingManifestPath(string stagingDirectory) =>
+        Path.Combine(stagingDirectory, "manifest.json");
+
+    private static void WriteStagingManifest(string stagingDirectory, List<StagedMove> moves, bool committed)
+    {
+        var manifest = new StagingManifest(moves, committed);
+        var temporaryPath = StagingManifestPath(stagingDirectory) + ".tmp";
+        File.WriteAllText(temporaryPath, JsonSerializer.Serialize(manifest, StagingJsonOptions));
+        File.Move(temporaryPath, StagingManifestPath(stagingDirectory), overwrite: true);
+    }
+
+    internal static void RestoreStagedDeletions(string stagingDirectory)
+    {
+        StagingManifest? manifest = null;
+        try
+        {
+            var manifestPath = StagingManifestPath(stagingDirectory);
+            if (File.Exists(manifestPath))
+            {
+                manifest = JsonSerializer.Deserialize<StagingManifest>(File.ReadAllText(manifestPath), StagingJsonOptions);
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            AppLog.Write("Не удалось прочитать манифест временной папки удаления.", exception);
+        }
+
+        if (manifest?.Moves is { Count: > 0 } && !manifest.Committed)
+        {
+            var root = Path.GetDirectoryName(Path.GetFullPath(stagingDirectory));
+            if (root is not null)
+            {
+                foreach (var move in manifest.Moves.AsEnumerable().Reverse())
+                {
+                    try
+                    {
+                        var source = Path.Combine(stagingDirectory, move.Current);
+                        var destination = Path.Combine(root, move.Original);
+                        if ((Directory.Exists(source) || File.Exists(source)) &&
+                            !Directory.Exists(destination) && !File.Exists(destination))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                            if (Directory.Exists(source))
+                            {
+                                Directory.Move(source, destination);
+                            }
+                            else
+                            {
+                                File.Move(source, destination);
+                            }
+                        }
+                    }
+                    catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                    {
+                        AppLog.Write("Не удалось вернуть файл из временной папки удаления.", exception);
+                    }
+                }
+            }
+        }
+
+        if (manifest is not null)
+        {
+            try
+            {
+                if (Directory.Exists(stagingDirectory))
+                {
+                    Directory.Delete(stagingDirectory, recursive: true);
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                AppLog.Write("Не удалось удалить временную папку удаления.", exception);
+            }
+        }
+        else
+        {
+            try
+            {
+                if (Directory.Exists(stagingDirectory) &&
+                    !Directory.EnumerateFileSystemEntries(stagingDirectory).Any())
+                {
+                    Directory.Delete(stagingDirectory);
+                }
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                AppLog.Write("Не удалось удалить пустую временную папку.", exception);
+            }
+        }
+    }
+
     private static void RestoreMoves(IEnumerable<(string Original, string Current)> moved)
     {
         foreach (var (original, current) in moved.Reverse())
@@ -455,7 +599,9 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         if (!string.Equals(code, updated, StringComparison.Ordinal))
         {
-            File.WriteAllText(codePath, updated);
+            var temporaryPath = codePath + ".tmp";
+            File.WriteAllText(temporaryPath, updated);
+            File.Move(temporaryPath, codePath, overwrite: true);
         }
     }
 

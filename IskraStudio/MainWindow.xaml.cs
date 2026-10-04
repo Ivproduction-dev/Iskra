@@ -47,6 +47,7 @@ public partial class MainWindow : Window
             _ => DetectSystemLightTheme()
         });
         ApplyWindowMode(appSettings.UseCustomWindow);
+        projectStore.SweepLeftoverOperations();
         var loadedProjects = projectStore.LoadAll(out var skippedProjects);
         foreach (var project in loadedProjects)
         {
