@@ -1,0 +1,12 @@
+# MSVC build artifacts
+*.obj
+*.pdb
+*.ilk
+*.pch
+/ruslang.exe
+/iskra-runtime.exe
+
+# Visual Studio and .NET build artifacts
+.vs/
+IskraStudio/bin/
+IskraStudio/obj/

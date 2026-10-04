@@ -1,0 +1,37 @@
+<Application x:Class="IskraStudio.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <SolidColorBrush x:Key="CanvasBrush" Color="#FAF9F5" />
+        <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="SoftBrush" Color="#F5F0E8" />
+        <SolidColorBrush x:Key="SelectedBrush" Color="#EFE9DE" />
+        <SolidColorBrush x:Key="CodeBrush" Color="#181715" />
+        <SolidColorBrush x:Key="InkBrush" Color="#141413" />
+        <SolidColorBrush x:Key="BodyBrush" Color="#3D3D3A" />
+        <SolidColorBrush x:Key="MutedBrush" Color="#6C6A64" />
+        <SolidColorBrush x:Key="HairlineBrush" Color="#E6DFD8" />
+        <SolidColorBrush x:Key="HairlineSoftBrush" Color="#EBE6DF" />
+        <SolidColorBrush x:Key="AccentBrush" Color="#A9583E" />
+        <SolidColorBrush x:Key="AccentHoverBrush" Color="#8F4430" />
+        <SolidColorBrush x:Key="AccentSoftBrush" Color="#F3E3DC" />
+        <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="SuccessBrush" Color="#2F7947" />
+        <SolidColorBrush x:Key="ErrorBrush" Color="#AE3A3A" />
+        <SolidColorBrush x:Key="OnDarkBrush" Color="#FAF9F5" />
+        <SolidColorBrush x:Key="OnDarkMutedBrush" Color="#A09D96" />
+        <SolidColorBrush x:Key="SceneSkyBrush" Color="#E9E5D9" />
+        <SolidColorBrush x:Key="SceneSkySoftBrush" Color="#E5EBE7" />
+        <SolidColorBrush x:Key="SceneGroundBrush" Color="#C0AC8D" />
+        <SolidColorBrush x:Key="SceneGroundSoftBrush" Color="#B9C9BE" />
+        <SolidColorBrush x:Key="ScenePlatformBrush" Color="#947C61" />
+        <SolidColorBrush x:Key="ScenePlatformDarkBrush" Color="#6D5945" />
+        <SolidColorBrush x:Key="SceneLeafBrush" Color="#89947C" />
+        <SolidColorBrush x:Key="SceneLeafDarkBrush" Color="#78876F" />
+        <SolidColorBrush x:Key="SceneGrassBrush" Color="#6D806F" />
+        <SolidColorBrush x:Key="SceneSunBrush" Color="#D9A85D" />
+        <SolidColorBrush x:Key="SceneSunSoftBrush" Color="#F1E9D5" />
+        <SolidColorBrush x:Key="SyntaxMintBrush" Color="#83B3A0" />
+    </Application.Resources>
+</Application>

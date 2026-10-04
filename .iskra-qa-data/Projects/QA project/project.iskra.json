@@ -1,0 +1,23 @@
+{
+  "Name": "QA project",
+  "Orientation": "Horizontal",
+  "CreatedAt": "2026-10-04T11:24:00.7691657+00:00",
+  "LastOpenedAt": "2026-10-04T11:52:40.3058553+00:00",
+  "Scenes": [
+    {
+      "Id": "f9bb6f9b-05a5-4df8-a1c1-7d5af1c1e895",
+      "Name": "\u0421\u0446\u0435\u043D\u0430",
+      "Objects": [
+        {
+          "Id": "20a97a51-ffe3-44b6-b17d-eedc476f21e5",
+          "Name": "QA Hero Renamed"
+        }
+      ]
+    },
+    {
+      "Id": "bce22d06-22c7-4d3d-8fe5-7e1bf757698e",
+      "Name": "\u0421\u0446\u0435\u043D\u0430 2",
+      "Objects": []
+    }
+  ]
+}
