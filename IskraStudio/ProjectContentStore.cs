@@ -221,7 +221,9 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         scene.Objects.Add(item);
         try
         {
-            File.WriteAllText(GetObjectScriptPath(project, scene, item.Id), DefaultObjectScript());
+            var scriptPath = GetObjectScriptPath(project, scene, item.Id);
+            Directory.CreateDirectory(Path.GetDirectoryName(scriptPath)!);
+            File.WriteAllText(scriptPath, DefaultObjectScript());
             projectStore.SaveProject(project);
             created = item;
             return true;
@@ -367,13 +369,17 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
     public string GetObjectScriptPath(IskraProject project, IskraScene scene, Guid objectId)
     {
         var directory = Path.Combine(projectStore.GetProjectDirectoryFor(project), "scripts", SceneDirectoryName(scene));
-        Directory.CreateDirectory(directory);
         return Path.Combine(directory, objectId.ToString("N") + ".isk");
     }
 
     public string GetObjectResourceDirectory(IskraProject project, IskraScene scene, Guid objectId, string resourceType)
     {
-        var directory = Path.Combine(projectStore.GetProjectDirectoryFor(project), resourceType, SceneDirectoryName(scene), objectId.ToString("N"));
+        return Path.Combine(projectStore.GetProjectDirectoryFor(project), resourceType, SceneDirectoryName(scene), objectId.ToString("N"));
+    }
+
+    public string EnsureObjectResourceDirectory(IskraProject project, IskraScene scene, Guid objectId, string resourceType)
+    {
+        var directory = GetObjectResourceDirectory(project, scene, objectId, resourceType);
         Directory.CreateDirectory(directory);
         return directory;
     }
@@ -423,7 +429,11 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         error = null;
         try
         {
-            File.WriteAllText(GetObjectScriptPath(project, scene, objectId), text);
+            var scriptPath = GetObjectScriptPath(project, scene, objectId);
+            Directory.CreateDirectory(Path.GetDirectoryName(scriptPath)!);
+            var temporaryPath = scriptPath + ".tmp";
+            File.WriteAllText(temporaryPath, text);
+            File.Move(temporaryPath, scriptPath, overwrite: true);
             return true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
@@ -458,7 +468,9 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         var root = projectStore.GetProjectDirectoryFor(project);
         Directory.CreateDirectory(Path.Combine(root, "sounds", SceneDirectoryName(scene)));
         Directory.CreateDirectory(Path.Combine(root, "sprites", SceneDirectoryName(scene)));
-        File.WriteAllText(GetObjectScriptPath(project, scene, IskraObject.BackgroundId), DefaultObjectScript());
+        var backgroundScript = GetObjectScriptPath(project, scene, IskraObject.BackgroundId);
+        Directory.CreateDirectory(Path.GetDirectoryName(backgroundScript)!);
+        File.WriteAllText(backgroundScript, DefaultObjectScript());
     }
 
     private void DeleteSceneDirectories(IskraProject project, IskraScene scene)

@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Closing += MainWindow_Closing;
         projectContentStore = new ProjectContentStore(projectStore);
         archiveService = new ProjectArchiveService(projectStore);
         appSettings = appSettingsStore.Load();
@@ -65,6 +66,16 @@ public partial class MainWindow : Window
                 "Некоторые проекты недоступны",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
+        }
+    }
+
+    private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        FlushScriptSave();
+        StopDetailMedia();
+        if (showingPainting && paintingDirty)
+        {
+            SavePainting();
         }
     }
 
@@ -418,6 +429,7 @@ public partial class MainWindow : Window
         }
 
         activeProject = project;
+        showingPainting = false;
         StopDetailMedia();
         RefreshProjectViews();
         LibraryView.Visibility = Visibility.Collapsed;
@@ -429,6 +441,27 @@ public partial class MainWindow : Window
 
     private void BackToProjects_Click(object sender, RoutedEventArgs e)
     {
+        if (WorkspaceView.Visibility == Visibility.Visible && showingPainting)
+        {
+            if (paintingDirty)
+            {
+                SavePainting();
+                return;
+            }
+            paintSpacePanning = false;
+            Mouse.OverrideCursor = null;
+            showingPainting = false;
+            if (detailScene is not null && detailItem is not null)
+            {
+                ShowObjectDetail(detailScene, detailItem, ObjectDetailTab.Images);
+            }
+            else if (activeScene is not null)
+            {
+                ShowObjectListPage(activeScene);
+            }
+            return;
+        }
+
         if (WorkspaceView.Visibility == Visibility.Visible && showingDetail && activeScene is not null)
         {
             ShowObjectListPage(activeScene);

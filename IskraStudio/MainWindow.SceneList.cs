@@ -17,6 +17,7 @@ public partial class MainWindow
 
         showingObjects = false;
         showingDetail = false;
+        showingPainting = false;
         activeScene = null;
         StopDetailMedia();
         workspaceSelectionMode = WorkspaceSelectionMode.None;

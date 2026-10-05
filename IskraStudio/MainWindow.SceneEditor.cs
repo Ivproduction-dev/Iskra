@@ -21,6 +21,7 @@ public partial class MainWindow
         activeScene = scene;
         showingObjects = true;
         showingDetail = false;
+        showingPainting = false;
         StopDetailMedia();
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
@@ -155,22 +156,28 @@ public partial class MainWindow
 
     private static ImageSource? LoadPreviewImage(string? path)
     {
-        if (path is null)
+        if (path is null || !File.Exists(path))
         {
             return null;
         }
         try
         {
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.DecodePixelWidth = 192;
-            image.UriSource = new Uri(path, UriKind.Absolute);
-            image.EndInit();
-            image.Freeze();
-            return image;
+            BitmapFrame frame;
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.IgnoreImageCache, BitmapCacheOption.OnLoad);
+                frame = decoder.Frames[0];
+            }
+            BitmapSource source = frame;
+            if (frame.PixelWidth > 192)
+            {
+                var scale = 192.0 / frame.PixelWidth;
+                source = new TransformedBitmap(frame, new ScaleTransform(scale, scale));
+            }
+            source.Freeze();
+            return source;
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException or FileFormatException)
         {
             return null;
         }

@@ -98,6 +98,7 @@ public sealed class ProjectStore
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
             {
+                AppLog.Write($"Не удалось прочитать проект «{Path.GetFileName(projectDirectory)}».", exception);
                 skipped.Add(Path.GetFileName(projectDirectory));
             }
         }
@@ -384,7 +385,7 @@ public sealed class ProjectStore
                     {
                         ProjectContentStore.RestoreStagedDeletions(staging);
                     }
-                    foreach (var temporary in Directory.EnumerateFiles(directory, "*.tmp"))
+                    foreach (var temporary in Directory.EnumerateFiles(directory, "*.tmp", System.IO.SearchOption.AllDirectories))
                     {
                         try
                         {

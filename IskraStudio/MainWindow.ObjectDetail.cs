@@ -37,11 +37,12 @@ public partial class MainWindow
 
     private WaveInEvent? recorder;
     private WaveFileWriter? recorderWriter;
+    private readonly object recorderLock = new object();
     private DispatcherTimer? recordingTimer;
     private DateTime recordingStarted;
     private bool isRecording;
 
-    private void ShowObjectDetail(IskraScene scene, IskraObject item)
+    private void ShowObjectDetail(IskraScene scene, IskraObject item, ObjectDetailTab tab = ObjectDetailTab.Images)
     {
         if (activeProject is null)
         {
@@ -51,7 +52,7 @@ public partial class MainWindow
         StopDetailMedia();
         detailScene = scene;
         detailItem = item;
-        detailTab = ObjectDetailTab.Images;
+        detailTab = tab;
         showingDetail = true;
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
@@ -77,7 +78,6 @@ public partial class MainWindow
         }
         catch
         {
-            // Игнорируем: превью звука необязательно.
         }
         soundPreviewPath = null;
         soundPreviewButton = null;
@@ -184,8 +184,18 @@ public partial class MainWindow
                 if (detailTab == ObjectDetailTab.Images)
                 {
                     ShowDetailSheet(("Нарисовать", "pencil", () =>
-                        MessageBox.Show(this, "Рисовалка появится позже. Пока образы можно импортировать из файлов.", "Искра Студио", MessageBoxButton.OK, MessageBoxImage.Information)),
-                        ("Импортировать", "import", ImportImages));
+                    {
+                        if (detailScene is null || detailItem is null)
+                        {
+                            return;
+                        }
+                        ShowSpriteNameDialog("Новый рисунок", "Как назвать спрайт?", "Рисовать",
+                            spriteName => StartPainting(detailScene, detailItem, null, 1024, 1024, spriteName));
+                    }), ("Импортировать", "import", () =>
+                    {
+                        ShowSpriteNameDialog("Импорт образов", "Как назвать спрайт? Для нескольких файлов добавятся номера.", "Выбрать",
+                            spriteName => ImportImagesNamed(spriteName));
+                    }));
                 }
                 else
                 {
@@ -623,6 +633,149 @@ public partial class MainWindow
         };
     }
 
+    private void ShowSpriteNameDialog(string title, string subtitle, string buttonLabel, Action<string> next)
+    {
+        var overlay = new Grid
+        {
+            Background = new SolidColorBrush(Color.FromArgb(0x99, 0, 0, 0))
+        };
+        Panel.SetZIndex(overlay, 40);
+        var card = new Border
+        {
+            Width = 400,
+            MaxWidth = 440,
+            Margin = new Thickness(24),
+            Padding = new Thickness(24),
+            Background = BrushFor("PanelBrush"),
+            BorderBrush = BrushFor("HairlineBrush"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(18),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        var layout = new StackPanel();
+        layout.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontSize = 20,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = BrushFor("InkBrush")
+        });
+        layout.Children.Add(new TextBlock
+        {
+            Text = subtitle,
+            Margin = new Thickness(0, 6, 0, 14),
+            FontSize = 13,
+            Foreground = BrushFor("MutedBrush"),
+            TextWrapping = TextWrapping.Wrap
+        });
+        var nameBox = new TextBox
+        {
+            Style = (Style)FindResource("ProjectTextBox"),
+            MinHeight = 44,
+            MaxLength = 50,
+            ToolTip = "Например, Герой"
+        };
+        layout.Children.Add(nameBox);
+        var error = new TextBlock
+        {
+            Visibility = Visibility.Collapsed,
+            Margin = new Thickness(0, 6, 0, 0),
+            FontSize = 12,
+            Foreground = BrushFor("ErrorBrush"),
+            TextWrapping = TextWrapping.Wrap
+        };
+        layout.Children.Add(error);
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 22, 0, 0) };
+        var cancelButton = new Button
+        {
+            Style = (Style)FindResource("ToolButton"),
+            Content = "Отмена",
+            Padding = new Thickness(14, 9, 14, 9)
+        };
+        var goButton = new Button
+        {
+            Style = (Style)FindResource("PrimaryButton"),
+            Content = buttonLabel,
+            Margin = new Thickness(8, 0, 0, 0),
+            Padding = new Thickness(18, 9, 18, 9)
+        };
+        buttons.Children.Add(cancelButton);
+        buttons.Children.Add(goButton);
+        layout.Children.Add(buttons);
+        card.Child = layout;
+        overlay.Children.Add(card);
+        overlay.MouseDown += (_, e) =>
+        {
+            if (ReferenceEquals(e.OriginalSource, overlay))
+            {
+                WorkspaceContentHost.Children.Remove(overlay);
+            }
+        };
+        cancelButton.Click += (_, _) => WorkspaceContentHost.Children.Remove(overlay);
+        goButton.Click += (_, _) =>
+        {
+            var name = nameBox.Text.Trim();
+            if (name.Length == 0)
+            {
+                error.Text = "Введи имя спрайта.";
+                error.Visibility = Visibility.Visible;
+                nameBox.Focus();
+                return;
+            }
+            if (name.Length > 50 || name is "." or ".." || name.EndsWith('.') || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                error.Text = "Имя слишком длинное или содержит недопустимые символы.";
+                error.Visibility = Visibility.Visible;
+                nameBox.Focus();
+                return;
+            }
+            WorkspaceContentHost.Children.Remove(overlay);
+            next(name);
+        };
+        WorkspaceContentHost.Children.Add(overlay);
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() => nameBox.Focus()));
+    }
+
+    private void ImportImagesNamed(string name)
+    {
+        if (activeProject is null || detailScene is null || detailItem is null)
+        {
+            return;
+        }
+
+        var dialog = new OpenFileDialog
+        {
+            Multiselect = true,
+            Filter = "Изображения|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.webp",
+            Title = "Выбери картинки для образа"
+        };
+        if (dialog.ShowDialog(this) != true)
+        {
+            return;
+        }
+
+        var directory = projectContentStore.EnsureObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sprites");
+        var counter = 0;
+        foreach (var source in dialog.FileNames)
+        {
+            try
+            {
+                var extension = Path.GetExtension(SafeFileName(source));
+                var fileName = dialog.FileNames.Length == 1
+                    ? name + extension
+                    : $"{name} ({++counter}){extension}";
+                File.Copy(source, FreeFilePath(directory, fileName));
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                AppLog.Write("Не удалось импортировать образ.", exception);
+                MessageBox.Show(this, $"Не удалось импортировать файл {Path.GetFileName(source)}.", "Искра Студио", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        BuildObjectDetail();
+    }
+
     private void ImportImages()
     {
         if (activeProject is null || detailScene is null || detailItem is null)
@@ -641,7 +794,7 @@ public partial class MainWindow
             return;
         }
 
-        var directory = projectContentStore.GetObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sprites");
+        var directory = projectContentStore.EnsureObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sprites");
         foreach (var source in dialog.FileNames)
         {
             try
@@ -670,11 +823,23 @@ public partial class MainWindow
             Padding = new Thickness(8)
         };
         var layout = new StackPanel();
+        var checkerGeometry = new GeometryGroup();
+        checkerGeometry.Children.Add(new RectangleGeometry(new Rect(0, 0, 8, 8)));
+        checkerGeometry.Children.Add(new RectangleGeometry(new Rect(8, 8, 8, 8)));
+        var checkerDrawing = new DrawingGroup();
+        checkerDrawing.Children.Add(new GeometryDrawing(new SolidColorBrush(Color.FromRgb(240, 240, 240)), null, new RectangleGeometry(new Rect(0, 0, 16, 16))));
+        checkerDrawing.Children.Add(new GeometryDrawing(new SolidColorBrush(Color.FromRgb(204, 204, 204)), null, checkerGeometry));
         var imageBox = new Border
         {
             Height = 100,
             CornerRadius = new CornerRadius(6),
-            Background = BrushFor("SoftBrush"),
+            Background = new DrawingBrush
+            {
+                Viewport = new Rect(0, 0, 16, 16),
+                ViewportUnits = BrushMappingMode.Absolute,
+                TileMode = TileMode.Tile,
+                Drawing = checkerDrawing
+            },
             ClipToBounds = true
         };
         if (LoadPreviewImage(path) is { } preview)
@@ -716,6 +881,18 @@ public partial class MainWindow
         nameRow.Children.Add(deleteButton);
         layout.Children.Add(nameRow);
         thumb.Child = layout;
+        thumb.Cursor = Cursors.Hand;
+        thumb.MouseLeftButtonUp += (_, e) =>
+        {
+            if (FindButtonAncestor(e.OriginalSource as DependencyObject) is not null)
+            {
+                return;
+            }
+            if (detailScene is not null && detailItem is not null)
+            {
+                StartPainting(detailScene, detailItem, path);
+            }
+        };
         return thumb;
     }
 
@@ -764,7 +941,7 @@ public partial class MainWindow
             return;
         }
 
-        var directory = projectContentStore.GetObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sounds");
+        var directory = projectContentStore.EnsureObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sounds");
         foreach (var source in dialog.FileNames)
         {
             try
@@ -866,7 +1043,6 @@ public partial class MainWindow
         }
         catch
         {
-            // Игнорируем: метаданные необязательны.
         }
         try
         {
@@ -885,7 +1061,6 @@ public partial class MainWindow
         }
         catch
         {
-            // Игнорируем: длительность не показалась, размер остался.
         }
     }
 
@@ -937,7 +1112,6 @@ public partial class MainWindow
         }
         catch
         {
-            // Игнорируем: превью звука необязательно.
         }
         if (soundPreviewButton is not null)
         {
@@ -954,19 +1128,37 @@ public partial class MainWindow
             return;
         }
 
+        string? recordingPath = null;
         try
         {
-            var directory = projectContentStore.GetObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sounds");
-            var path = FreeFilePath(directory, "Запись.wav");
+            var directory = projectContentStore.EnsureObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sounds");
+            recordingPath = FreeFilePath(directory, "Запись.wav");
+            var path = recordingPath;
             recorder = new WaveInEvent { WaveFormat = new WaveFormat(44100, 1) };
             recorderWriter = new WaveFileWriter(path, recorder.WaveFormat);
-            recorder.DataAvailable += (_, e) => recorderWriter?.Write(e.Buffer, 0, e.BytesRecorded);
+            recorder.DataAvailable += (_, e) =>
+            {
+                try
+                {
+                    lock (recorderLock)
+                    {
+                        recorderWriter?.Write(e.Buffer, 0, e.BytesRecorded);
+                    }
+                }
+                catch (Exception writeException) when (writeException is IOException or UnauthorizedAccessException or ObjectDisposedException)
+                {
+                    AppLog.Write("Не удалось записать кусок звука.", writeException);
+                }
+            };
             recorder.RecordingStopped += (_, _) =>
             {
-                recorderWriter?.Dispose();
-                recorderWriter = null;
-                recorder?.Dispose();
-                recorder = null;
+                lock (recorderLock)
+                {
+                    recorderWriter?.Dispose();
+                    recorderWriter = null;
+                    recorder?.Dispose();
+                    recorder = null;
+                }
                 Dispatcher.BeginInvoke(() =>
                 {
                     isRecording = false;
@@ -991,6 +1183,39 @@ public partial class MainWindow
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             AppLog.Write("Не удалось начать запись с микрофона.", exception);
+            lock (recorderLock)
+            {
+                try
+                {
+                    recorderWriter?.Dispose();
+                }
+                catch
+                {
+                }
+                recorderWriter = null;
+                try
+                {
+                    recorder?.Dispose();
+                }
+                catch
+                {
+                }
+                recorder = null;
+            }
+            recordingTimer?.Stop();
+            recordingTimer = null;
+            isRecording = false;
+            try
+            {
+                if (recordingPath is not null && File.Exists(recordingPath))
+                {
+                    File.Delete(recordingPath);
+                }
+            }
+            catch (Exception deleteException) when (deleteException is IOException or UnauthorizedAccessException)
+            {
+                AppLog.Write("Не удалось удалить недописанный файл записи.", deleteException);
+            }
             MessageBox.Show(this, "Не удалось начать запись. Проверь микрофон.", "Искра Студио", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -1010,7 +1235,6 @@ public partial class MainWindow
         }
         catch
         {
-            // Игнорируем: запись уже остановлена устройством.
         }
     }
 
@@ -1061,6 +1285,18 @@ public partial class MainWindow
             "eye" => "M2,12 C2,12 6,5.5 12,5.5 C18,5.5 22,12 22,12 C22,12 18,18.5 12,18.5 C6,18.5 2,12 2,12 Z M12,9.5 a2.5,2.5 0 1 0 0.01,0 Z",
             "sound" => "M4,9.5 H8 L13.5,5 V19 L8,14.5 H4 Z M16,9 a4.5,4.5 0 0 1 0,6 M18.5,6.5 a8,8 0 0 1 0,11",
             "code" => "M8.5,7.5 L4,12 L8.5,16.5 M15.5,7.5 L20,12 L15.5,16.5 M13.2,6.5 L10.8,17.5",
+            "brush" => "M4.5,19.5 L14,10 M14,10 L19.5,4.5",
+            "eraser" => "M7,14 L12,9 L19,16 L14,21 Z M3,21 H10",
+            "fillbucket" => "M7,11 H13 L14.5,20 H8.5 Z M13,11 L17,5 M17,5 c1,1.5 1.5,2.5 1.5,3.5 a1.5,1.5 0 1 1 -3,0 C15.5,7.5 16,6.5 17,5 Z",
+            "pipette" => "M16,4.5 a3,3 0 1 0 0.01,0 M13.8,6.8 L6,14.6 L4,20 L9.4,18 L17.2,10.2",
+            "shape" => "M5,7 H19 V17 H5 Z",
+            "ellipse" => "M12,5 C16.5,5 20,8 20,12 C20,16 16.5,19 12,19 C7.5,19 4,16 4,12 C4,8 7.5,5 12,5 Z",
+            "line" => "M5,19 L19,5",
+            "handmove" => "M12,3 V21 M3,12 H21 M12,3 L9.5,5.5 M12,3 L14.5,5.5 M12,21 L9.5,18.5 M12,21 L14.5,18.5 M3,12 L5.5,9.5 M3,12 L5.5,14.5 M21,12 L18.5,9.5 M21,12 L18.5,14.5",
+            "undo" => "M9,5 H4 V10 M4,5 C4,12 8.5,17.5 15,17.5",
+            "redo" => "M15,5 H20 V10 M20,5 C20,12 15.5,17.5 9,17.5",
+            "spray" => "M10,14 H14 V21 H10 Z M11,14 L9,5 M13,14 L15,5 M12,14 L12,4",
+            "text" => "M5,20 L12,4 L19,20 M8,15 H16",
             _ => "M10,12 V6 a4,4 0 0 1 8,0 V12 a4,4 0 0 1 -8,0 Z M6,12 a8,8 0 0 0 16,0 M14,20 V23 M10,23 H18"
         };
         return new Viewbox
