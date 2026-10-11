@@ -37,6 +37,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         Closing += MainWindow_Closing;
         projectContentStore = new ProjectContentStore(projectStore);
+        projectRuntime = new ProjectRuntime(projectStore, projectContentStore);
         archiveService = new ProjectArchiveService(projectStore);
         appSettings = appSettingsStore.Load();
         selectedTheme = Math.Clamp(appSettings.Theme, 0, 2);
@@ -152,6 +153,12 @@ public partial class MainWindow : Window
 
     private void ShowCreateProject_Click(object sender, RoutedEventArgs e)
     {
+        if (showingDetail)
+        {
+            AddToCurrentDetail();
+            return;
+        }
+
         if (WorkspaceView.Visibility == Visibility.Visible && activeProject is not null)
         {
             if (showingObjects)
@@ -574,7 +581,7 @@ public partial class MainWindow : Window
                 ["BodyBrush"] = "#3D3D3A", ["MutedBrush"] = "#6C6A64", ["HairlineBrush"] = "#E6DFD8",
                 ["HairlineSoftBrush"] = "#EBE6DF", ["AccentBrush"] = "#A9583E", ["AccentHoverBrush"] = "#8F4430",
                 ["AccentSoftBrush"] = "#F3E3DC", ["OnAccentBrush"] = "#FFFFFF", ["SuccessBrush"] = "#2F7947",
-                ["ErrorBrush"] = "#AE3A3A", ["OnDarkBrush"] = "#FAF9F5", ["OnDarkMutedBrush"] = "#A09D96"
+                ["WarningBrush"] = "#8A5A08", ["ErrorBrush"] = "#AE3A3A", ["OnDarkBrush"] = "#FAF9F5", ["OnDarkMutedBrush"] = "#A09D96"
             }
             : new Dictionary<string, string>
             {
@@ -583,7 +590,7 @@ public partial class MainWindow : Window
                 ["BodyBrush"] = "#DFDBD3", ["MutedBrush"] = "#AAA59C", ["HairlineBrush"] = "#403C36",
                 ["HairlineSoftBrush"] = "#35322D", ["AccentBrush"] = "#A9583E", ["AccentHoverBrush"] = "#8F4430",
                 ["AccentSoftBrush"] = "#3D2A23", ["OnAccentBrush"] = "#FFFFFF", ["SuccessBrush"] = "#79C28D",
-                ["ErrorBrush"] = "#F08080", ["OnDarkBrush"] = "#F7F4EE", ["OnDarkMutedBrush"] = "#AAA59C"
+                ["WarningBrush"] = "#E6B75E", ["ErrorBrush"] = "#F08080", ["OnDarkBrush"] = "#F7F4EE", ["OnDarkMutedBrush"] = "#AAA59C"
             };
 
         foreach (var (key, color) in palette)

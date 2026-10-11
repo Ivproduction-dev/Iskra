@@ -966,6 +966,8 @@ public partial class MainWindow
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
         CreateProjectButton.Visibility = Visibility.Collapsed;
+        RunProjectButton.Visibility = Visibility.Collapsed;
+        DiagnosticsBadgeButton.Visibility = Visibility.Collapsed;
         UpdateFloatingCreateButton();
         PreviewKeyDown -= PaintScreen_KeyDown;
         PreviewKeyDown += PaintScreen_KeyDown;

@@ -26,6 +26,13 @@ public partial class MainWindow
         Scripts
     }
 
+    private static readonly ObjectDetailTab[] DetailTabOrder =
+    [
+        ObjectDetailTab.Scripts,
+        ObjectDetailTab.Images,
+        ObjectDetailTab.Sounds
+    ];
+
     private bool showingDetail;
     private IskraScene? detailScene;
     private IskraObject? detailItem;
@@ -61,8 +68,10 @@ public partial class MainWindow
         WorkspaceMenuButton.Visibility = Visibility.Collapsed;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
-        CreateProjectButton.Visibility = Visibility.Collapsed;
+        CreateProjectButton.Visibility = detailTab == ObjectDetailTab.Scripts ? Visibility.Collapsed : Visibility.Visible;
+        RunProjectButton.Visibility = Visibility.Visible;
         UpdateFloatingCreateButton();
+        RefreshProjectDiagnostics();
         BuildObjectDetail();
     }
 
@@ -82,6 +91,37 @@ public partial class MainWindow
         soundPreviewPath = null;
         soundPreviewButton = null;
         StopRecording();
+    }
+
+    private void AddToCurrentDetail()
+    {
+        if (detailScene is null || detailItem is null)
+        {
+            return;
+        }
+
+        if (detailTab == ObjectDetailTab.Images)
+        {
+            ShowDetailSheet(("Нарисовать", "pencil", () =>
+            {
+                if (detailScene is null || detailItem is null)
+                {
+                    return;
+                }
+                ShowSpriteNameDialog("Новый рисунок", "Как назвать спрайт?", "Рисовать",
+                    spriteName => StartPainting(detailScene, detailItem, null, 1024, 1024, spriteName));
+            }), ("Импортировать", "import", () =>
+            {
+                ShowSpriteNameDialog("Импорт образов", "Как назвать спрайт? Для нескольких файлов добавятся номера.", "Выбрать",
+                    spriteName => ImportImagesNamed(spriteName));
+            }));
+            return;
+        }
+
+        if (detailTab == ObjectDetailTab.Sounds)
+        {
+            ShowDetailSheet(("Выбрать из файла", "file", ImportSounds), ("Записать с микрофона", "mic", StartRecording));
+        }
     }
 
     private void BuildObjectDetail(int slideDirection = 0)
@@ -105,23 +145,23 @@ public partial class MainWindow
         tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        AddDetailTab(tabGrid, "Образы", "eye", ObjectDetailTab.Images, 0);
-        AddDetailTab(tabGrid, "Звуки", "sound", ObjectDetailTab.Sounds, 1);
-        AddDetailTab(tabGrid, "Скрипты", "code", ObjectDetailTab.Scripts, 2);
+        AddDetailTab(tabGrid, "Скрипты", "code", ObjectDetailTab.Scripts, 0);
+        AddDetailTab(tabGrid, "Образы", "eye", ObjectDetailTab.Images, 1);
+        AddDetailTab(tabGrid, "Звуки", "sound", ObjectDetailTab.Sounds, 2);
         var dots = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             HorizontalAlignment = HorizontalAlignment.Center,
             Margin = new Thickness(0, 1, 0, 6)
         };
-        for (var dotIndex = 0; dotIndex <= (int)ObjectDetailTab.Scripts; dotIndex++)
+        for (var dotIndex = 0; dotIndex < DetailTabOrder.Length; dotIndex++)
         {
             dots.Children.Add(new System.Windows.Shapes.Ellipse
             {
                 Width = 6,
                 Height = 6,
                 Margin = new Thickness(3, 0, 3, 0),
-                Fill = BrushFor(dotIndex == (int)detailTab ? "AccentBrush" : "HairlineBrush")
+                Fill = BrushFor(DetailTabOrder[dotIndex] == detailTab ? "AccentBrush" : "HairlineBrush")
             });
         }
         var stripStack = new StackPanel();
@@ -168,45 +208,6 @@ public partial class MainWindow
         var root = new Grid();
         root.Children.Add(layout);
 
-        if (detailTab != ObjectDetailTab.Scripts)
-        {
-            var floatingAdd = new Button
-            {
-                Style = (Style)FindResource("FloatingActionButton"),
-                Content = "＋",
-                ToolTip = detailTab == ObjectDetailTab.Images ? "Добавить образ" : "Добавить звук",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Bottom,
-                Margin = new Thickness(0, 0, 0, 18)
-            };
-            floatingAdd.Click += (_, _) =>
-            {
-                if (detailTab == ObjectDetailTab.Images)
-                {
-                    ShowDetailSheet(("Нарисовать", "pencil", () =>
-                    {
-                        if (detailScene is null || detailItem is null)
-                        {
-                            return;
-                        }
-                        ShowSpriteNameDialog("Новый рисунок", "Как назвать спрайт?", "Рисовать",
-                            spriteName => StartPainting(detailScene, detailItem, null, 1024, 1024, spriteName));
-                    }), ("Импортировать", "import", () =>
-                    {
-                        ShowSpriteNameDialog("Импорт образов", "Как назвать спрайт? Для нескольких файлов добавятся номера.", "Выбрать",
-                            spriteName => ImportImagesNamed(spriteName));
-                    }));
-                }
-                else
-                {
-                    ShowDetailSheet(("Выбрать из файла", "file", ImportSounds), ("Записать с микрофона", "mic", StartRecording));
-                }
-            };
-            AutomationProperties.SetName(floatingAdd, floatingAdd.ToolTip.ToString());
-            Panel.SetZIndex(floatingAdd, 15);
-            root.Children.Add(floatingAdd);
-        }
-
         detailSheetOverlay = new Grid
         {
             Visibility = Visibility.Collapsed,
@@ -244,6 +245,8 @@ public partial class MainWindow
         FlushScriptSave();
         StopSoundPreview();
         detailTab = tab;
+        CreateProjectButton.Visibility = detailTab == ObjectDetailTab.Scripts ? Visibility.Collapsed : Visibility.Visible;
+        UpdateFloatingCreateButton();
         BuildObjectDetail(direction);
     }
 
@@ -365,12 +368,12 @@ public partial class MainWindow
 
     private void SwipeDetailTab(int direction)
     {
-        var index = (int)detailTab + direction;
-        if (index < 0 || index > (int)ObjectDetailTab.Scripts)
+        var index = Array.IndexOf(DetailTabOrder, detailTab) + direction;
+        if (index < 0 || index >= DetailTabOrder.Length)
         {
             return;
         }
-        SwitchDetailTab((ObjectDetailTab)index, direction);
+        SwitchDetailTab(DetailTabOrder[index], direction);
     }
 
     private void AddDetailTab(Grid grid, string label, string icon, ObjectDetailTab tab, int column)
@@ -486,6 +489,21 @@ public partial class MainWindow
     private TextBlock? detailScriptStatus;
     private DispatcherTimer? detailSaveTimer;
     private bool detailScriptDirty;
+    private static readonly (string Label, string Command, string? Placeholder)[] ScriptCommandSuggestions =
+    [
+        ("Задать имя = значение", "Задать имя = ", "имя"),
+        ("Присвоить имя = значение", "Присвоить имя = ", "имя"),
+        ("Задать изображение.", "Задать изображение. ", null),
+        ("Присвоить изображение.", "Присвоить изображение. ", null),
+        ("Изменить имя число", "Изменить имя ", "имя"),
+        ("Изменить изображение. перед", "Изменить изображение. перед", null),
+        ("Изменить изображение. назад", "Изменить изображение. назад", null),
+        ("Поместить X Y", "Поместить X Y", "X Y"),
+        ("Печать значение", "Печать ", null),
+        ("Показать объект", "Показать ", null),
+        ("Воспроизвести звук.", "Воспроизвести звук. ", null),
+        ("Воспроизвести звук ждать.", "Воспроизвести звук ждать. ", null)
+    ];
 
     private void BuildScriptsPage(StackPanel content)
     {
@@ -551,7 +569,168 @@ public partial class MainWindow
             detailSaveTimer.Stop();
             detailSaveTimer.Start();
         };
+        AttachScriptCommandSuggestions(editor);
         content.Children.Add(status);
+    }
+
+    private void AttachScriptCommandSuggestions(TextEditor editor)
+    {
+        var popupRows = new StackPanel();
+        var popup = new Popup
+        {
+            AllowsTransparency = true,
+            Placement = PlacementMode.Relative,
+            PlacementTarget = editor.TextArea.TextView,
+            StaysOpen = true,
+            Focusable = false,
+            Child = new Border
+            {
+                Background = BrushFor("PanelBrush"),
+                BorderBrush = BrushFor("HairlineBrush"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(4),
+                Child = popupRows
+            }
+        };
+        var selectedIndex = 0;
+        var replacementOffset = 0;
+        var replacementLength = 0;
+        var visibleSuggestions = Array.Empty<(string Label, string Command, string? Placeholder)>();
+
+        void SelectSuggestion(int index)
+        {
+            if (visibleSuggestions.Length == 0)
+            {
+                return;
+            }
+
+            selectedIndex = (index + visibleSuggestions.Length) % visibleSuggestions.Length;
+            for (var rowIndex = 0; rowIndex < popupRows.Children.Count; rowIndex++)
+            {
+                if (popupRows.Children[rowIndex] is Border row)
+                {
+                    row.Background = BrushFor(rowIndex == selectedIndex ? "SelectedBrush" : "PanelBrush");
+                }
+            }
+        }
+
+        void AcceptSuggestion()
+        {
+            if (!popup.IsOpen || visibleSuggestions.Length == 0)
+            {
+                return;
+            }
+
+            var suggestion = visibleSuggestions[selectedIndex];
+            var command = suggestion.Command;
+            popup.IsOpen = false;
+            editor.Document.Replace(replacementOffset, replacementLength, command);
+            if (suggestion.Placeholder is { } placeholder)
+            {
+                editor.Select(replacementOffset + command.IndexOf(placeholder, StringComparison.Ordinal), placeholder.Length);
+            }
+            else
+            {
+                editor.CaretOffset = replacementOffset + command.Length;
+            }
+            editor.TextArea.Focus();
+        }
+
+        void RefreshSuggestions()
+        {
+            if (!editor.IsKeyboardFocusWithin)
+            {
+                popup.IsOpen = false;
+                return;
+            }
+
+            var caret = editor.TextArea.Caret;
+            var line = editor.Document.GetLineByNumber(caret.Line);
+            var caretColumn = Math.Clamp(caret.Column - 1, 0, line.Length);
+            var textBeforeCaret = editor.Document.GetText(line.Offset, caretColumn);
+            var indentationLength = textBeforeCaret.Length - textBeforeCaret.TrimStart().Length;
+            var prefix = textBeforeCaret[indentationLength..];
+            visibleSuggestions = prefix.Length == 0
+                ? Array.Empty<(string Label, string Command, string? Placeholder)>()
+                : ScriptCommandSuggestions
+                    .Where(suggestion => suggestion.Label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ||
+                        suggestion.Command.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
+
+            if (visibleSuggestions.Length == 0)
+            {
+                popup.IsOpen = false;
+                popupRows.Children.Clear();
+                return;
+            }
+
+            replacementOffset = line.Offset + indentationLength;
+            replacementLength = prefix.Length;
+            selectedIndex = 0;
+            popupRows.Children.Clear();
+            foreach (var suggestion in visibleSuggestions)
+            {
+                var row = new Border
+                {
+                    Padding = new Thickness(10, 7, 10, 7),
+                    CornerRadius = new CornerRadius(5),
+                    Background = BrushFor("PanelBrush"),
+                    Child = new TextBlock
+                    {
+                        Text = suggestion.Label,
+                        FontSize = 13,
+                        Foreground = BrushFor("InkBrush")
+                    }
+                };
+                row.MouseEnter += (_, _) => SelectSuggestion(popupRows.Children.IndexOf(row));
+                row.MouseLeftButtonDown += (_, e) =>
+                {
+                    e.Handled = true;
+                    SelectSuggestion(popupRows.Children.IndexOf(row));
+                    AcceptSuggestion();
+                };
+                popupRows.Children.Add(row);
+            }
+
+            SelectSuggestion(0);
+            var caretPoint = editor.TextArea.TextView.GetVisualPosition(caret.Position, ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineBottom);
+            popup.HorizontalOffset = caretPoint.X;
+            popup.VerticalOffset = caretPoint.Y + 3;
+            popup.IsOpen = true;
+        }
+
+        editor.TextChanged += (_, _) => RefreshSuggestions();
+        editor.TextArea.Caret.PositionChanged += (_, _) => RefreshSuggestions();
+        editor.TextArea.PreviewKeyDown += (_, e) =>
+        {
+            if (!popup.IsOpen)
+            {
+                return;
+            }
+
+            switch (e.Key)
+            {
+                case Key.Down:
+                    SelectSuggestion(selectedIndex + 1);
+                    e.Handled = true;
+                    break;
+                case Key.Up:
+                    SelectSuggestion(selectedIndex - 1);
+                    e.Handled = true;
+                    break;
+                case Key.Tab:
+                    AcceptSuggestion();
+                    e.Handled = true;
+                    break;
+                case Key.Escape:
+                    popup.IsOpen = false;
+                    e.Handled = true;
+                    break;
+            }
+        };
+        editor.LostKeyboardFocus += (_, _) => popup.IsOpen = false;
+        editor.Unloaded += (_, _) => popup.IsOpen = false;
     }
 
     private void FlushScriptSave()
@@ -569,6 +748,7 @@ public partial class MainWindow
                 detailScriptStatus.Text = "Сохранено " + DateTime.Now.ToString("HH:mm:ss");
                 detailScriptStatus.Foreground = BrushFor("SuccessBrush");
             }
+            RefreshProjectDiagnostics();
         }
         else if (detailScriptStatus is not null)
         {
@@ -846,6 +1026,14 @@ public partial class MainWindow
         {
             imageBox.Child = new Image { Source = preview, Stretch = Stretch.Uniform };
         }
+        imageBox.Cursor = Cursors.Hand;
+        imageBox.MouseLeftButtonUp += (_, _) =>
+        {
+            if (detailScene is not null && detailItem is not null)
+            {
+                StartPainting(detailScene, detailItem, path);
+            }
+        };
         layout.Children.Add(imageBox);
         var nameRow = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 8, 0, 0) };
         var name = new TextBlock
@@ -854,7 +1042,28 @@ public partial class MainWindow
             FontSize = 11,
             Foreground = BrushFor(isPreview ? "AccentBrush" : "MutedBrush"),
             TextTrimming = TextTrimming.CharacterEllipsis,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            Cursor = Cursors.Hand,
+            ToolTip = "Дважды щёлкни, чтобы скопировать имя файла"
+        };
+        name.MouseLeftButtonDown += (_, e) =>
+        {
+            if (e.ClickCount != 2)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            try
+            {
+                Clipboard.SetText(Path.GetFileName(path));
+                ShowRuntimeToast("Имя файла скопировано");
+            }
+            catch (Exception exception) when (exception is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
+            {
+                AppLog.Write("Не удалось скопировать имя файла образа.", exception);
+                ShowRuntimeToast("Не удалось скопировать имя файла");
+            }
         };
         nameRow.Children.Add(name);
         var deleteButton = new Button
@@ -881,18 +1090,6 @@ public partial class MainWindow
         nameRow.Children.Add(deleteButton);
         layout.Children.Add(nameRow);
         thumb.Child = layout;
-        thumb.Cursor = Cursors.Hand;
-        thumb.MouseLeftButtonUp += (_, e) =>
-        {
-            if (FindButtonAncestor(e.OriginalSource as DependencyObject) is not null)
-            {
-                return;
-            }
-            if (detailScene is not null && detailItem is not null)
-            {
-                StartPainting(detailScene, detailItem, path);
-            }
-        };
         return thumb;
     }
 
@@ -1009,6 +1206,27 @@ public partial class MainWindow
         DockPanel.SetDock(deleteButton, Dock.Right);
         layout.Children.Add(deleteButton);
         var info = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        info.Cursor = Cursors.Hand;
+        info.ToolTip = "Дважды щёлкни по имени, чтобы скопировать имя файла";
+        info.MouseLeftButtonDown += (_, e) =>
+        {
+            if (e.ClickCount != 2)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            try
+            {
+                Clipboard.SetText(Path.GetFileName(path));
+                ShowRuntimeToast("Имя файла скопировано");
+            }
+            catch (Exception exception) when (exception is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
+            {
+                AppLog.Write("Не удалось скопировать имя звукового файла.", exception);
+                ShowRuntimeToast("Не удалось скопировать имя файла");
+            }
+        };
         info.Children.Add(new TextBlock
         {
             Text = Path.GetFileName(path),

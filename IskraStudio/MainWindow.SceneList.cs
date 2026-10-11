@@ -29,7 +29,9 @@ public partial class MainWindow
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
         CreateProjectButton.Visibility = Visibility.Visible;
+        RunProjectButton.Visibility = Visibility.Visible;
         UpdateFloatingCreateButton();
+        RefreshProjectDiagnostics();
         BuildSceneList();
     }
 

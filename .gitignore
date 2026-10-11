@@ -5,6 +5,7 @@
 *.pch
 /ruslang.exe
 /iskra-runtime.exe
+/iskra-tests.exe
 
 # Visual Studio and .NET build artifacts
 .vs/

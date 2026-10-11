@@ -32,7 +32,9 @@ public partial class MainWindow
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
         CreateProjectButton.Visibility = Visibility.Visible;
+        RunProjectButton.Visibility = Visibility.Visible;
         UpdateFloatingCreateButton();
+        RefreshProjectDiagnostics();
         BuildObjectList();
     }
 
@@ -267,7 +269,12 @@ public partial class MainWindow
 
     private void UpdateFloatingCreateButton()
     {
-        var text = showingObjects ? "Создать объект" :
+        var text = showingDetail ? detailTab switch
+        {
+            ObjectDetailTab.Images => "Добавить образ",
+            ObjectDetailTab.Sounds => "Добавить звук",
+            _ => "Добавить ресурс"
+        } : showingObjects ? "Создать объект" :
             WorkspaceView.Visibility == Visibility.Visible ? "Создать сцену" : "Создать проект";
         CreateProjectButton.ToolTip = text;
         AutomationProperties.SetName(CreateProjectButton, text);

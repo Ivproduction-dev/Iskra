@@ -419,7 +419,14 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         var path = GetObjectScriptPath(project, scene, objectId);
         if (File.Exists(path))
         {
-            return File.ReadAllText(path);
+            var script = File.ReadAllText(path);
+            if (string.Equals(NormalizeLineEndings(script), NormalizeLineEndings(LegacyDefaultObjectScript()), StringComparison.Ordinal))
+            {
+                var updatedScript = DefaultObjectScript();
+                TryWriteObjectScript(project, scene, objectId, updatedScript, out _);
+                return updatedScript;
+            }
+            return script;
         }
         return DefaultObjectScript();
     }
@@ -444,7 +451,12 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
     }
 
     private static string DefaultObjectScript() =>
+        "Печать \"Привет мир\"" + Environment.NewLine;
+
+    private static string LegacyDefaultObjectScript() =>
         "Задать скорость = 0" + Environment.NewLine + "Печать скорость" + Environment.NewLine;
+
+    private static string NormalizeLineEndings(string text) => text.Replace("\r\n", "\n", StringComparison.Ordinal);
 
     private static void TryDeleteFile(string path)
     {
