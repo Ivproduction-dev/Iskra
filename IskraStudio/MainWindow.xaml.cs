@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private readonly ProjectContentStore projectContentStore;
     private readonly ProjectArchiveService archiveService;
     private readonly AppSettingsStore appSettingsStore = new();
+    private readonly RuntimeDebugPanel runtimeDebugPanel = new();
     private readonly ObservableCollection<IskraProject> projects = [];
     private IskraAppSettings appSettings = new();
     private UIElement? previousView;
@@ -35,6 +36,15 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        RuntimeDebugHost.Content = runtimeDebugPanel;
+        PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key == Key.F3 && runningGameWindow is not null)
+            {
+                runtimeDebugPanel.ToggleVisibility();
+                e.Handled = true;
+            }
+        };
         Closing += MainWindow_Closing;
         projectContentStore = new ProjectContentStore(projectStore);
         projectRuntime = new ProjectRuntime(projectStore, projectContentStore);
@@ -149,6 +159,18 @@ public partial class MainWindow : Window
     private void MainWindow_StateChanged(object? sender, EventArgs e)
     {
         UpdateCustomWindowButtons();
+        WindowResizeGrip.Visibility = WindowState == WindowState.Normal ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void WindowResizeGrip_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+    {
+        if (WindowState != WindowState.Normal)
+        {
+            return;
+        }
+
+        Width = Math.Max(MinWidth, Width + e.HorizontalChange);
+        Height = Math.Max(MinHeight, Height + e.VerticalChange);
     }
 
     private void ShowCreateProject_Click(object sender, RoutedEventArgs e)
@@ -402,6 +424,7 @@ public partial class MainWindow : Window
         RecentProjectButton.Visibility = recentProject is null ? Visibility.Collapsed : Visibility.Visible;
         RecentProjectButton.Tag = recentProject;
         RecentProjectName.Text = recentProject?.Name ?? string.Empty;
+        RecentProjectName.ToolTip = recentProject?.Name;
     }
 
     private void ProjectRow_Click(object sender, RoutedEventArgs e)
@@ -552,7 +575,8 @@ public partial class MainWindow : Window
     {
         if (IsLoaded)
         {
-            ToggleWindowStateButton.Content = WindowState == WindowState.Maximized ? "❐" : "□";
+            ToggleWindowStateIcon.Source = (System.Windows.Media.ImageSource)FindResource(
+                WindowState == WindowState.Maximized ? "Icon.Restore" : "Icon.Maximize");
             ToggleWindowStateButton.ToolTip = WindowState == WindowState.Maximized ? "Восстановить" : "Развернуть";
         }
     }

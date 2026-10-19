@@ -26,7 +26,7 @@ public partial class MainWindow
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = scene.Name;
-        WorkspaceBackButton.Content = "←  Список сцен";
+        WorkspaceBackButton.Content = CreateIconContent("arrowleft", "Список сцен");
         WorkspaceMenuButton.ToolTip = "Действия со сценой";
         WorkspaceMenuButton.Visibility = Visibility.Visible;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
@@ -130,8 +130,7 @@ public partial class MainWindow
             Width = 44,
             Height = 52,
             Padding = new Thickness(0),
-            Content = "⋮",
-            FontSize = 20,
+            Content = CreateSheetIcon("dots", 18),
             ToolTip = $"Действия с объектом {item.Name}",
             Tag = item
         };
@@ -185,38 +184,22 @@ public partial class MainWindow
         }
     }
 
-    private static Button? FindButtonAncestor(DependencyObject? source)
-    {
-        var current = source;
-        while (current is not null)
-        {
-            if (current is Button button)
-            {
-                return button;
-            }
-            current = VisualTreeHelper.GetParent(current);
-        }
-        return null;
-    }
-
     private UIElement CreateEntryRow(string name, Button? actionsButton, string automationName, string? previewPath, Action? open)
     {
-        var row = new Border
+        var row = new Grid
         {
             Height = 124,
-            Margin = new Thickness(0, 0, 0, 24),
-            Background = BrushFor("PanelBrush"),
-            BorderBrush = BrushFor("HairlineBrush"),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10)
+            Margin = new Thickness(0, 0, 0, 24)
         };
-        var layout = new Grid { Margin = new Thickness(12, 0, 10, 0) };
-        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(104) });
-        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         if (actionsButton is not null)
         {
-            layout.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(56) });
         }
+
+        var layout = new Grid { Margin = new Thickness(12) };
+        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(104) });
+        layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         layout.Children.Add(new Border
         {
             Width = 96,
@@ -241,28 +224,44 @@ public partial class MainWindow
             FontSize = 19,
             FontWeight = FontWeights.Medium,
             Foreground = BrushFor("InkBrush"),
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            ToolTip = name
         };
         Grid.SetColumn(nameBlock, 1);
         layout.Children.Add(nameBlock);
-        if (actionsButton is not null)
-        {
-            Grid.SetColumn(actionsButton, 2);
-            layout.Children.Add(actionsButton);
-        }
-        row.Child = layout;
-        AutomationProperties.SetName(row, automationName);
         if (open is not null)
         {
-            row.Cursor = Cursors.Hand;
-            row.MouseLeftButtonUp += (_, e) =>
+            var openButton = new Button
             {
-                if (FindButtonAncestor(e.OriginalSource as DependencyObject) is not null)
-                {
-                    return;
-                }
-                open();
+                Style = (Style)FindResource("ProjectCardButton"),
+                Content = layout,
+                Height = 124,
+                Padding = new Thickness(0),
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                VerticalContentAlignment = VerticalAlignment.Stretch,
             };
+            openButton.Click += (_, _) => open();
+            AutomationProperties.SetName(openButton, automationName);
+            row.Children.Add(openButton);
+        }
+        else
+        {
+            var staticRow = new Border
+            {
+                Height = 124,
+                Background = BrushFor("PanelBrush"),
+                BorderBrush = BrushFor("HairlineBrush"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(10),
+                Child = layout
+            };
+            row.Children.Add(staticRow);
+        }
+        if (actionsButton is not null)
+        {
+            Grid.SetColumn(actionsButton, 1);
+            row.Children.Add(actionsButton);
         }
         return row;
     }

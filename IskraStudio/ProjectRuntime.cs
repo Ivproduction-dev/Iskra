@@ -1,10 +1,12 @@
 using System.IO;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -25,7 +27,19 @@ internal sealed record RuntimeDiagnostic(
     Guid SceneId,
     Guid ObjectId);
 
-internal sealed record RuntimeCommand(string Kind, string Argument, int Line);
+internal sealed record RuntimeCommand(string Kind, string Argument, int Line, int Target = -1, Guid? TargetObjectId = null, Guid? ResourceOwnerId = null, string? Condition = null);
+internal sealed record RuntimeDebugVariable(string SceneName, string ObjectName, string Name, string Value);
+internal static class SpriteSizeSyntax
+{
+    public const double MaximumPercent = 100_000d;
+
+    public static bool IsValidSetSize(double amount) =>
+        double.IsFinite(amount) && amount is >= 0 and <= MaximumPercent;
+
+    public static double ApplyChange(double currentPercent, double change) =>
+        Math.Clamp(currentPercent + change, 0d, MaximumPercent);
+}
+
 internal sealed record CompiledObject(Guid Id, string Name, string ScriptPath, List<RuntimeCommand> Commands);
 internal sealed record CompiledScene(Guid Id, string Name, List<CompiledObject> Objects);
 internal sealed record CompiledProject(int Version, string Name, ProjectOrientation Orientation, List<CompiledScene> Scenes);
@@ -40,20 +54,40 @@ internal sealed record RuntimeCompileResult(
     public bool HasWarnings => Diagnostics.Any(item => item.Severity == RuntimeDiagnosticSeverity.Warning);
 }
 
-internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentStore contentStore)
+internal sealed partial class ProjectRuntime(ProjectStore projectStore, ProjectContentStore contentStore)
 {
-    private const int CacheVersion = 2;
+    internal ProjectContentStore ContentStore => contentStore;
+
+    private const int CacheVersion = 16;
     private static readonly Regex CommandPattern = new(
         "^(?<name>Задать|Присвоить)\\s+изображение\\s*\\.\\s*(?<arg>.+)$",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-    private static readonly Regex ImageStepPattern = new(
-        "^Изменить\\s+изображение\\s*\\.\\s*(?<arg>перед|назад)$",
+    private static readonly Regex SetTransparencyPattern = new(
+        "^Задать\\s+прозрачность\\s*\\.\\s*(?<amount>[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex ChangeTransparencyPattern = new(
+        "^Изменить\\s+прозрачность\\s*\\.\\s*(?<amount>[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex SetSizePattern = new(
+        "^Задать\\s+размер\\s*\\.\\s*(?<amount>[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex ChangeSizePattern = new(
+        "^Изменить\\s+размер\\s*\\.\\s*(?<amount>[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex SetBrightnessPattern = new(
+        "^Задать\\s+яркость\\s*\\.\\s*(?<amount>[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex ChangeBrightnessPattern = new(
+        "^Изменить\\s+яркость\\s*\\.\\s*(?<amount>[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))$",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex AudioPattern = new(
         "^Воспроизвести\\s+звук(?<wait>\\s+ждать)?\\s*\\.\\s*(?<arg>.+)$",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     private static readonly Regex PlacePattern = new(
         "^Поместить\\s+(?<x>-?\\d+)\\s+(?<y>-?\\d+)$",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    private static readonly Regex WaitPattern = new(
+        "^Ждать\\s+(?<amount>\\d+)\\s+(?<unit>секунд(?:а|ы|у|е|ой|ами|ах)?|минут(?:а|ы|у|е|ой|ами|ах)?|час(?:а|ов|у|ом|ами|ах)?)$",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
     public RuntimeCompileResult Compile(IskraProject project, bool createCache = true, IProgress<string>? progress = null)
@@ -157,198 +191,6 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
         }
     }
 
-    public static async Task RunSceneAsync(
-        CompiledProject project,
-        IskraScene scene,
-        IskraProject sourceProject,
-        ProjectContentStore contentStore,
-        FrameworkElement sceneSurface,
-        Action<string>? output = null,
-        CancellationToken cancellationToken = default)
-    {
-        var compiledScene = project.Scenes.FirstOrDefault(item => item.Id == scene.Id);
-        if (compiledScene is null)
-        {
-            return;
-        }
-
-        var imageLists = new Dictionary<Guid, List<string>>();
-        foreach (var item in compiledScene.Objects)
-        {
-            var resourceDirectory = contentStore.GetObjectResourceDirectory(sourceProject, scene, item.Id, "sprites");
-            imageLists[item.Id] = ProjectContentStore.ListResourceFiles(resourceDirectory, ProjectContentStore.ImageExtensions);
-        }
-
-        var renderTargets = new List<FrameworkElement>();
-        var backgroundImage = imageLists.GetValueOrDefault(IskraObject.BackgroundId)?.FirstOrDefault();
-        if (backgroundImage is not null && sceneSurface is Panel panel)
-        {
-            var background = new Image
-            {
-                Source = LoadBitmap(backgroundImage),
-                Stretch = Stretch.UniformToFill,
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                IsHitTestVisible = false
-            };
-            panel.Children.Add(background);
-            Panel.SetZIndex(background, 1);
-            renderTargets.Add(background);
-        }
-
-        var perObjectImage = new Dictionary<Guid, Image>();
-        if (sceneSurface is Panel objectPanel)
-        {
-            foreach (var item in compiledScene.Objects.Where(item => item.Id != IskraObject.BackgroundId))
-            {
-                var images = imageLists[item.Id];
-                if (images.Count == 0)
-                {
-                    continue;
-                }
-                var image = new Image
-                {
-                    Source = LoadBitmap(images[0]),
-                    Stretch = Stretch.None,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    RenderTransform = new TranslateTransform(),
-                    IsHitTestVisible = false
-                };
-                objectPanel.Children.Add(image);
-                Panel.SetZIndex(image, 2);
-                perObjectImage[item.Id] = image;
-                renderTargets.Add(image);
-            }
-        }
-
-        var variables = compiledScene.Objects.ToDictionary(item => item.Id, _ => new Dictionary<string, string>(StringComparer.Ordinal));
-        var players = new List<MediaPlayer>();
-        try
-        {
-            var tasks = compiledScene.Objects.Select(item => RunObjectAsync(item)).ToArray();
-            await Task.WhenAll(tasks);
-            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
-        finally
-        {
-            foreach (var player in players)
-            {
-                player.Stop();
-                player.Close();
-            }
-        }
-
-        async Task RunObjectAsync(CompiledObject item)
-        {
-            var spriteIndex = 0;
-            foreach (var command in item.Commands)
-            {
-                switch (command.Kind)
-                {
-                    case "set-image":
-                        if (TryResolveSprite(item, command.Argument, out var imagePath))
-                        {
-                            if (item.Id == IskraObject.BackgroundId && sceneSurface is Panel backgroundPanel)
-                            {
-                                var layer = backgroundPanel.Children.OfType<Image>().FirstOrDefault();
-                                if (layer is not null) layer.Source = LoadBitmap(imagePath);
-                            }
-                            else if (perObjectImage.GetValueOrDefault(item.Id) is { } sprite)
-                            {
-                                sprite.Source = LoadBitmap(imagePath);
-                                var sourceList = imageLists[item.Id];
-                                spriteIndex = sourceList.IndexOf(imagePath);
-                            }
-                        }
-                        break;
-                    case "step-image":
-                        if (imageLists.GetValueOrDefault(item.Id) is { Count: > 0 } images && perObjectImage.GetValueOrDefault(item.Id) is { } cyclingSprite)
-                        {
-                            spriteIndex = (spriteIndex + (command.Argument == "назад" ? -1 : 1) + images.Count) % images.Count;
-                            cyclingSprite.Source = LoadBitmap(images[spriteIndex]);
-                        }
-                        break;
-                    case "place":
-                        var coordinates = command.Argument.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (coordinates.Length == 2 && int.TryParse(coordinates[0], out var x) && int.TryParse(coordinates[1], out var y))
-                        {
-                            if (perObjectImage.GetValueOrDefault(item.Id)?.RenderTransform is TranslateTransform translation)
-                            {
-                                translation.X = x;
-                                translation.Y = y;
-                            }
-                        }
-                        break;
-                    case "play-sound":
-                    case "play-sound-wait":
-                        if (TryResolveSound(command.Argument, item, compiledScene, sourceProject, contentStore, variables, out var soundPath))
-                        {
-                            var player = new MediaPlayer();
-                            players.Add(player);
-                            if (command.Kind == "play-sound-wait")
-                            {
-                                var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-                                EventHandler handler = (_, _) => ended.TrySetResult();
-                                player.MediaEnded += handler;
-                                player.MediaFailed += (_, _) => ended.TrySetResult();
-                                player.Open(new Uri(soundPath, UriKind.Absolute));
-                                player.Play();
-                                await ended.Task.WaitAsync(cancellationToken);
-                                player.MediaEnded -= handler;
-                            }
-                            else
-                            {
-                                player.Open(new Uri(soundPath, UriKind.Absolute));
-                                player.Play();
-                            }
-                        }
-                        break;
-                    case "set-value":
-                        variables[item.Id][command.Argument[..command.Argument.IndexOf('=')].Trim()] = ResolveValue(command.Argument[(command.Argument.IndexOf('=') + 1)..].Trim(), variables[item.Id]);
-                        break;
-                    case "change-value":
-                        var changeParts = command.Argument.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                        if (changeParts.Length == 2 && long.TryParse(changeParts[1], out var change) &&
-                            long.TryParse(variables[item.Id].GetValueOrDefault(changeParts[0]), out var current))
-                        {
-                            variables[item.Id][changeParts[0]] = (current + change).ToString();
-                        }
-                        break;
-                    case "print":
-                        output?.Invoke(ResolveValue(command.Argument, variables[item.Id]));
-                        break;
-                    case "show":
-                        break;
-                }
-            }
-        }
-
-        bool TryResolveSprite(CompiledObject item, string reference, out string path)
-        {
-            var objectId = item.Id;
-            var fileName = reference;
-            var dot = reference.IndexOf('.');
-            if (dot > 0)
-            {
-                var owner = compiledScene.Objects.FirstOrDefault(value =>
-                    string.Equals(value.Name, reference[..dot], StringComparison.OrdinalIgnoreCase));
-                if (owner is not null)
-                {
-                    objectId = owner.Id;
-                    fileName = reference[(dot + 1)..];
-                }
-            }
-            var directory = contentStore.GetObjectResourceDirectory(sourceProject, scene, objectId, "sprites");
-            path = ProjectContentStore.ListResourceFiles(directory, ProjectContentStore.ImageExtensions)
-                .FirstOrDefault(value => string.Equals(Path.GetFileName(value), fileName, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
-            return path.Length > 0;
-        }
-    }
-
     private List<RuntimeCommand> CompileScript(
         IskraProject project,
         IskraScene scene,
@@ -358,34 +200,401 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
         List<RuntimeDiagnostic> diagnostics)
     {
         var commands = new List<RuntimeCommand>();
+        var flow = new ScriptFlowBuilder(commands);
         var knownValues = new Dictionary<string, string>(StringComparer.Ordinal);
         var lineNumber = 0;
-        foreach (var rawLine in source.Split('\n'))
+        var eventStarted = false;
+        var commandsOutsideEvent = false;
+        string? requiredEventEnd = null;
+        var requiredEventLine = 0;
+        foreach (var sourceLine in ConditionalDirectiveParser.ExpandInline(source))
         {
-            lineNumber++;
-            var line = rawLine.Trim();
+            lineNumber = sourceLine.LineNumber;
+            var line = sourceLine.Text;
             if (line.Length == 0 || line.StartsWith("//", StringComparison.Ordinal)) continue;
+
+            var eventLineKind = ConditionalDirectiveParser.ClassifyEventLine(line, eventStarted);
+            if (eventLineKind == ScriptEventLineKind.Start)
+            {
+                if (requiredEventEnd is not null)
+                {
+                    AddAtLine(RuntimeDiagnosticSeverity.Error,
+                        $"Для блока «{requiredEventEnd}» не найдена команда «Конец».", requiredEventLine);
+                    requiredEventEnd = null;
+                }
+                eventStarted = true;
+                knownValues.Clear();
+                foreach (var openBlock in flow.OpenBlocks)
+                {
+                    AddAtLine(RuntimeDiagnosticSeverity.Error,
+                        $"Блок «{openBlock.Name}» должен завершиться командой «Конец» до следующего события.", openBlock.Line);
+                    flow.End(out _, out _);
+                }
+                if (ConditionalDirectiveParser.TryParseConditionEvent(line, out var eventCondition))
+                {
+                    if (!ConditionalDirectiveParser.IsValidCondition(eventCondition))
+                    {
+                        Add(RuntimeDiagnosticSeverity.Error, "Формат события: «Когда. готово = истина» или «Как.Только готово = истина».");
+                    }
+                    else
+                    {
+                        ValidateConditionReferences(eventCondition);
+                        commands.Add(new RuntimeCommand("event", "when", lineNumber, Condition: eventCondition));
+                    }
+                }
+                else
+                {
+                    ConditionalDirectiveParser.TryParseEventDetail(line, out var eventKind, out var eventArgument);
+                    commands.Add(new RuntimeCommand("event", eventKind, lineNumber, Condition: eventArgument));
+                    if (eventKind is "key" or "every" or "frame")
+                    {
+                        requiredEventEnd = line;
+                        requiredEventLine = lineNumber;
+                    }
+                }
+                continue;
+            }
+
+            if (eventLineKind == ScriptEventLineKind.Unsupported)
+            {
+                if (ScriptCommandSyntax.TryParseKeyboardEvent(line, out var keyToken, out var keyId))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error,
+                        $"Клавиша «{keyToken}» не распознана. Подходят: {KeyboardKeySyntax.AllowedKeysHint}.");
+                }
+                else if (ScriptCommandSyntax.IsKeyboardEventPrefix(line))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error,
+                        "Формат события: «При. нажатии клавиши.пробел» — клавиша пишется словом или одним символом.");
+                }
+                else if (ScriptCommandSyntax.IsEveryEventPrefix(line))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error,
+                        "Формат события: «Каждые.2.секунды» — целое число секунд, минимум 1.");
+                }
+                else if (ScriptCommandSyntax.IsFrameEventPrefix(line))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, "Формат события: «Каждый кадр».");
+                }
+                else
+                {
+                    Add(RuntimeDiagnosticSeverity.Error,
+                        "Поддерживаются события «При. запуске», «При. нажатии», «При. отпускании», «При. наведении», «При. нажатии клавиши.X», «Каждые.N.секунды», «Каждый кадр», «Когда.» и «Как.Только».");
+                }
+                continue;
+            }
+
+            if (eventLineKind == ScriptEventLineKind.OutsideEvent)
+            {
+                commandsOutsideEvent = true;
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.TryParseIf(line, out var condition))
+            {
+                knownValues.Clear();
+                if (!flow.BeginIf(condition, lineNumber, out var error))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, error);
+                }
+                else
+                {
+                    ValidateConditionReferences(condition);
+                }
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.IsForever(line))
+            {
+                flow.BeginForever(lineNumber);
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.TryParseWhile(line, out condition))
+            {
+                knownValues.Clear();
+                if (!flow.BeginWhile(condition, lineNumber, out var error))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, error);
+                }
+                else
+                {
+                    ValidateConditionReferences(condition);
+                }
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.IsWhilePrefix(line))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат цикла: «Пока условие то». Например: «Пока жизни > 0 то».");
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.IsIfPrefix(line))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат условия: «Если условие то». Например: «Если готово = истина то».");
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.TryParseElseIf(line, out condition))
+            {
+                knownValues.Clear();
+                if (!flow.ElseIf(condition, lineNumber, out var error))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, error);
+                }
+                else
+                {
+                    ValidateConditionReferences(condition);
+                }
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.IsElse(line))
+            {
+                knownValues.Clear();
+                if (!flow.Else(lineNumber, out var error))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, error);
+                }
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.IsElsePrefix(line))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат условия: «Иначе если условие то» или отдельная команда «Иначе».");
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.IsEnd(line))
+            {
+                knownValues.Clear();
+                if (eventStarted && flow.OpenBlocks.Count == 0)
+                {
+                    commands.Add(new RuntimeCommand("event-end", string.Empty, lineNumber));
+                    eventStarted = false;
+                    requiredEventEnd = null;
+                    continue;
+                }
+                if (!flow.End(out _, out var error))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, error);
+                }
+                continue;
+            }
+
+            if (ConditionalDirectiveParser.IsBreak(line))
+            {
+                if (!flow.Break(lineNumber, out var error))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, error);
+                }
+                continue;
+            }
 
             var imageMatch = CommandPattern.Match(line);
             if (imageMatch.Success)
             {
                 var argument = imageMatch.Groups["arg"].Value.Trim();
+                var localSpriteFiles = ProjectContentStore.ListResourceFiles(
+                    contentStore.GetObjectResourceDirectory(project, scene, item.Id, "sprites"), ProjectContentStore.ImageExtensions);
+                var imageAssignment = ImageCommandSyntax.ResolveAssignment(argument, item.Id, objects,
+                    fileName => localSpriteFiles.Any(path => string.Equals(Path.GetFileName(path), fileName, StringComparison.OrdinalIgnoreCase)));
                 var path = FindResource(project, scene, item.Id, "sprites", argument, objects);
                 if (path is null)
                     Add(RuntimeDiagnosticSeverity.Error, $"Изображение «{argument}» не найдено.");
                 else
-                    commands.Add(new RuntimeCommand("set-image", argument, lineNumber));
+                    commands.Add(new RuntimeCommand("set-image", imageAssignment.FileName, lineNumber,
+                        TargetObjectId: imageAssignment.TargetId, ResourceOwnerId: imageAssignment.ResourceOwnerId));
                 continue;
             }
 
-            var stepMatch = ImageStepPattern.Match(line);
-            if (stepMatch.Success)
+            if (ImageCommandSyntax.StartsStepCommand(line))
             {
-                var spriteDirectory = contentStore.GetObjectResourceDirectory(project, scene, item.Id, "sprites");
+                if (!ImageCommandSyntax.TryParseStepCommand(line, out var targetName, out var direction))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error,
+                        "Формат команды: «Изменить изображение. перед/назад» или «Изменить изображение. имя объекта.перед/назад».");
+                    continue;
+                }
+
+                var targetObjectId = item.Id;
+                if (targetName is not null)
+                {
+                    var target = objects.FirstOrDefault(candidate =>
+                        string.Equals(candidate.Name, targetName, StringComparison.OrdinalIgnoreCase));
+                    if (target is null)
+                    {
+                        Add(RuntimeDiagnosticSeverity.Error, $"Объект «{targetName}» не найден.");
+                        continue;
+                    }
+                    targetObjectId = target.Id;
+                }
+
+                var spriteDirectory = contentStore.GetObjectResourceDirectory(project, scene, targetObjectId, "sprites");
                 if (ProjectContentStore.ListResourceFiles(spriteDirectory, ProjectContentStore.ImageExtensions).Count == 0)
-                    Add(RuntimeDiagnosticSeverity.Warning, "У объекта пока нет изображений для переключения.");
+                    Add(RuntimeDiagnosticSeverity.Warning, $"У объекта «{objects.First(candidate => candidate.Id == targetObjectId).Name}» пока нет изображений для переключения.");
                 else
-                    commands.Add(new RuntimeCommand("step-image", stepMatch.Groups["arg"].Value.ToLowerInvariant(), lineNumber));
+                    commands.Add(new RuntimeCommand("step-image", direction.ToLowerInvariant(), lineNumber,
+                        TargetObjectId: targetObjectId, ResourceOwnerId: targetObjectId));
+                continue;
+            }
+
+            var setTransparency = SetTransparencyPattern.Match(line);
+            if (setTransparency.Success)
+            {
+                if (!ImageEffectSyntax.TryParsePercent(setTransparency.Groups["amount"].Value, out var amount))
+                {
+                    Add(RuntimeDiagnosticSeverity.Warning, "Прозрачность вне диапазона 0–100; команда пропущена.");
+                }
+                else
+                {
+                    commands.Add(new RuntimeCommand("set-transparency", amount.ToString("R", CultureInfo.InvariantCulture), lineNumber));
+                }
+                continue;
+            }
+
+            if (line.StartsWith("Задать прозрачность", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Задать прозрачность. 50»; допустимо от 0 до 100.");
+                continue;
+            }
+
+            var changeTransparency = ChangeTransparencyPattern.Match(line);
+            if (changeTransparency.Success)
+            {
+                if (!double.TryParse(changeTransparency.Groups["amount"].Value, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out var amount) || !double.IsFinite(amount))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, "Укажи изменение прозрачности числом.");
+                }
+                else
+                {
+                    commands.Add(new RuntimeCommand("change-transparency", amount.ToString("R", CultureInfo.InvariantCulture), lineNumber));
+                }
+                continue;
+            }
+
+            if (line.StartsWith("Изменить прозрачность", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Изменить прозрачность. 10» или «Изменить прозрачность. -10».");
+                continue;
+            }
+
+            var setSize = SetSizePattern.Match(line);
+            if (setSize.Success)
+            {
+                if (!double.TryParse(setSize.Groups["amount"].Value, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out var amount) || !SpriteSizeSyntax.IsValidSetSize(amount))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, "Размер образа должен быть числом от 0 до 100000 процентов.");
+                }
+                else
+                {
+                    commands.Add(new RuntimeCommand("set-size", amount.ToString("R", CultureInfo.InvariantCulture), lineNumber));
+                }
+                continue;
+            }
+
+            if (line.StartsWith("Задать размер", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Задать размер. 100»; допустимо от 0 до 100000 процентов, где 100 — исходный размер.");
+                continue;
+            }
+
+            var changeSize = ChangeSizePattern.Match(line);
+            if (changeSize.Success)
+            {
+                if (!double.TryParse(changeSize.Groups["amount"].Value, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out var amount) || !double.IsFinite(amount))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, "Изменение размера должно быть числом в процентах.");
+                }
+                else
+                {
+                    commands.Add(new RuntimeCommand("change-size", amount.ToString("R", CultureInfo.InvariantCulture), lineNumber));
+                }
+                continue;
+            }
+
+            if (line.StartsWith("Изменить размер", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Изменить размер. 10» или «Изменить размер. -10».");
+                continue;
+            }
+
+            var setBrightness = SetBrightnessPattern.Match(line);
+            if (setBrightness.Success)
+            {
+                if (!ImageEffectSyntax.TryParsePercent(setBrightness.Groups["amount"].Value, out var amount))
+                {
+                    Add(RuntimeDiagnosticSeverity.Warning, "Яркость вне диапазона 0–100; команда пропущена.");
+                }
+                else
+                {
+                    commands.Add(new RuntimeCommand("set-brightness", amount.ToString("R", CultureInfo.InvariantCulture), lineNumber));
+                }
+                continue;
+            }
+
+            if (line.StartsWith("Задать яркость", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Задать яркость. 50»; допустимо от 0 до 100.");
+                continue;
+            }
+
+            var changeBrightness = ChangeBrightnessPattern.Match(line);
+            if (changeBrightness.Success)
+            {
+                if (!double.TryParse(changeBrightness.Groups["amount"].Value, NumberStyles.Float,
+                        CultureInfo.InvariantCulture, out var amount) || !double.IsFinite(amount))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, "Укажи изменение яркости числом.");
+                }
+                else
+                {
+                    commands.Add(new RuntimeCommand("change-brightness", amount.ToString("R", CultureInfo.InvariantCulture), lineNumber));
+                }
+                continue;
+            }
+
+            if (line.StartsWith("Изменить яркость", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Изменить яркость. 10» или «Изменить яркость. -10».");
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseMoveBy(line, out var moveOffset, out var moveError))
+            {
+                if (moveError is null) commands.Add(new RuntimeCommand("move-by", moveOffset, lineNumber));
+                else Add(RuntimeDiagnosticSeverity.Error, moveError);
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseSceneCommand(line, out var resumeScene, out var sceneName, out var sceneError))
+            {
+                if (sceneError is not null)
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, sceneError);
+                }
+                else if (!project.Scenes.Any(candidate =>
+                             string.Equals(candidate.Name, sceneName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, $"Сцена «{sceneName}» не найдена.");
+                }
+                else
+                {
+                    var targetScene = project.Scenes.First(candidate =>
+                        string.Equals(candidate.Name, sceneName, StringComparison.OrdinalIgnoreCase));
+                    commands.Add(new RuntimeCommand(resumeScene ? "resume-scene" : "launch-scene", targetScene.Name, lineNumber));
+                }
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseOrientationCommand(line, out var orientationMode, out var orientationError))
+            {
+                if (orientationError is null) commands.Add(new RuntimeCommand("set-orientation", orientationMode, lineNumber));
+                else Add(RuntimeDiagnosticSeverity.Error, orientationError);
                 continue;
             }
 
@@ -403,6 +612,29 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
                 continue;
             }
 
+            var waitMatch = WaitPattern.Match(line);
+            if (waitMatch.Success)
+            {
+                var unit = waitMatch.Groups["unit"].Value;
+                var multiplier = unit.StartsWith("час", StringComparison.OrdinalIgnoreCase) ? 3_600_000L :
+                    unit.StartsWith("минут", StringComparison.OrdinalIgnoreCase) ? 60_000L : 1_000L;
+                if (long.TryParse(waitMatch.Groups["amount"].Value, out var amount) && amount <= int.MaxValue / multiplier)
+                {
+                    commands.Add(new RuntimeCommand("wait", (amount * multiplier).ToString(), lineNumber));
+                }
+                else
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, "Время ожидания слишком большое.");
+                }
+                continue;
+            }
+
+            if (line.StartsWith("Ждать", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: Ждать число и единицу времени, например «Ждать 2 секунды».");
+                continue;
+            }
+
             var audioMatch = AudioPattern.Match(line);
             if (audioMatch.Success)
             {
@@ -412,6 +644,108 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
                     FindResource(project, scene, item.Id, "sounds", effectiveArgument, objects) is null)
                     Add(RuntimeDiagnosticSeverity.Error, $"Звуковой файл «{effectiveArgument}» не найден.");
                 commands.Add(new RuntimeCommand(audioMatch.Groups["wait"].Success ? "play-sound-wait" : "play-sound", argument, lineNumber));
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseLoopSound(line, out var loopFile, out var loopError))
+            {
+                if (loopError is not null)
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, loopError);
+                }
+                else
+                {
+                    var effectiveLoopFile = knownValues.TryGetValue(loopFile, out var knownLoop) ? knownLoop : loopFile;
+                    if (!LooksLikeDynamicValue(loopFile, knownValues) &&
+                        FindResource(project, scene, item.Id, "sounds", effectiveLoopFile, objects) is null)
+                        Add(RuntimeDiagnosticSeverity.Error, $"Звуковой файл «{effectiveLoopFile}» не найден.");
+                    else
+                        commands.Add(new RuntimeCommand("loop-sound", loopFile, lineNumber));
+                }
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseStopSound(line, out var stopFile, out var stopError))
+            {
+                if (stopError is not null)
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, stopError);
+                }
+                else
+                {
+                    var effectiveStopFile = knownValues.TryGetValue(stopFile, out var knownStop) ? knownStop : stopFile;
+                    if (!LooksLikeDynamicValue(stopFile, knownValues) &&
+                        FindResource(project, scene, item.Id, "sounds", effectiveStopFile, objects) is null)
+                        Add(RuntimeDiagnosticSeverity.Error, $"Звуковой файл «{effectiveStopFile}» не найден.");
+                    else
+                        commands.Add(new RuntimeCommand("stop-sound", stopFile, lineNumber));
+                }
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseVolume(line, out var volumeFile, out var volumeAmount, out var volumeError))
+            {
+                if (volumeError is not null)
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, volumeError);
+                }
+                else if (!ImageEffectSyntax.TryParsePercent(volumeAmount, out var volume))
+                {
+                    Add(RuntimeDiagnosticSeverity.Warning, "Громкость вне диапазона 0–100; команда пропущена.");
+                }
+                else if (volumeFile is null)
+                {
+                    commands.Add(new RuntimeCommand("set-volume", volume.ToString("R", CultureInfo.InvariantCulture), lineNumber));
+                }
+                else
+                {
+                    var effectiveVolumeFile = knownValues.TryGetValue(volumeFile, out var knownVolume) ? knownVolume : volumeFile;
+                    if (!LooksLikeDynamicValue(volumeFile, knownValues) &&
+                        FindResource(project, scene, item.Id, "sounds", effectiveVolumeFile, objects) is null)
+                        Add(RuntimeDiagnosticSeverity.Error, $"Звуковой файл «{effectiveVolumeFile}» не найден.");
+                    else
+                        commands.Add(new RuntimeCommand("set-sound-volume",
+                            $"{volume.ToString("R", CultureInfo.InvariantCulture)} {volumeFile}", lineNumber));
+                }
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParsePlayImage(line, out var imageSpeed, out var imageObjectName, out var imageError))
+            {
+                if (imageError is not null)
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, imageError);
+                }
+                else
+                {
+                    var imageTargetId = item.Id;
+                    var imageTargetName = item.Name;
+                    if (imageObjectName is not null)
+                    {
+                        var imageTarget = objects.FirstOrDefault(candidate =>
+                            string.Equals(candidate.Name, imageObjectName, StringComparison.OrdinalIgnoreCase));
+                        if (imageTarget is null)
+                        {
+                            Add(RuntimeDiagnosticSeverity.Error, $"Объект «{imageObjectName}» не найден.");
+                            continue;
+                        }
+                        imageTargetId = imageTarget.Id;
+                        imageTargetName = imageTarget.Name;
+                    }
+                    var imageSpriteDirectory = contentStore.GetObjectResourceDirectory(project, scene, imageTargetId, "sprites");
+                    if (ProjectContentStore.ListResourceFiles(imageSpriteDirectory, ProjectContentStore.ImageExtensions).Count == 0)
+                        Add(RuntimeDiagnosticSeverity.Warning, $"У объекта «{imageTargetName}» пока нет изображений для переключения.");
+                    else
+                        commands.Add(new RuntimeCommand("play-image", imageSpeed.ToString(CultureInfo.InvariantCulture), lineNumber,
+                            TargetObjectId: imageTargetId, ResourceOwnerId: imageTargetId));
+                }
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseStopImage(line, out var stopImageError))
+            {
+                if (stopImageError is null) commands.Add(new RuntimeCommand("stop-image", string.Empty, lineNumber));
+                else Add(RuntimeDiagnosticSeverity.Error, stopImageError);
                 continue;
             }
 
@@ -425,17 +759,54 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
                     Add(RuntimeDiagnosticSeverity.Error, "После знака = нужно значение.");
                     continue;
                 }
-                if (long.TryParse(value, out _) || IsQuoted(value)) knownValues[name] = value.Trim('"');
+                if (ScriptCommandSyntax.TryReadPositionAxis(name, out var positionAxis))
+                {
+                    commands.Add(new RuntimeCommand("set-position",
+                        $"{ScriptCommandSyntax.AxisId(positionAxis)} {value}", lineNumber));
+                    continue;
+                }
+                if (!ScriptCommandSyntax.ValidateVariableName(name, out var nameError))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, nameError!);
+                    continue;
+                }
+                if (long.TryParse(value, out _) || IsQuoted(value) || IsBooleanLiteral(value)) knownValues[name] = value.Trim('"');
                 else if (knownValues.ContainsKey(value)) knownValues[name] = knownValues[value];
                 else knownValues.Remove(name);
                 commands.Add(new RuntimeCommand("set-value", $"{name} = {value}", lineNumber));
                 continue;
             }
 
+            if (line.StartsWith("Задать Свойство", StringComparison.OrdinalIgnoreCase) ||
+                line.StartsWith("Присвоить Свойство", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Задать Свойство.х = 5» — имя свойства, знак = и значение.");
+                continue;
+            }
+
             var change = Regex.Match(line, "^Изменить\\s+(?<name>[^\\s]+)\\s+(?<amount>-?\\d+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             if (change.Success)
             {
-                commands.Add(new RuntimeCommand("change-value", $"{change.Groups["name"].Value} {change.Groups["amount"].Value}", lineNumber));
+                var changeName = change.Groups["name"].Value;
+                var changeAmount = change.Groups["amount"].Value;
+                if (ScriptCommandSyntax.TryReadPositionAxis(changeName, out var changeAxis))
+                {
+                    commands.Add(new RuntimeCommand("change-position",
+                        $"{ScriptCommandSyntax.AxisId(changeAxis)} {changeAmount}", lineNumber));
+                    continue;
+                }
+                if (!ScriptCommandSyntax.ValidateVariableName(changeName, out var changeNameError))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, changeNameError!);
+                    continue;
+                }
+                commands.Add(new RuntimeCommand("change-value", $"{changeName} {changeAmount}", lineNumber));
+                continue;
+            }
+
+            if (line.StartsWith("Изменить Свойство", StringComparison.OrdinalIgnoreCase))
+            {
+                Add(RuntimeDiagnosticSeverity.Error, "Формат команды: «Изменить Свойство.х 5» — сдвиг по одной оси целым числом.");
                 continue;
             }
 
@@ -447,45 +818,118 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
                 continue;
             }
 
-            var show = Regex.Match(line, "^Показать\\s+(?<name>[^\\s]+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            if (show.Success)
+            if (ScriptCommandSyntax.TryParseVisibility(line, out var visibleState, out var visibilityTarget, out var visibilityError))
             {
-                var objectName = show.Groups["name"].Value;
-                if (!objects.Any(candidate => string.Equals(candidate.Name, objectName, StringComparison.OrdinalIgnoreCase)))
-                    Add(RuntimeDiagnosticSeverity.Warning, $"Объект «{objectName}» не найден; команда пропущена.");
+                if (visibilityError is not null)
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, visibilityError);
+                }
+                else if (visibilityTarget is null)
+                {
+                    commands.Add(new RuntimeCommand(visibleState ? "show" : "hide", string.Empty, lineNumber,
+                        TargetObjectId: item.Id));
+                }
                 else
-                    commands.Add(new RuntimeCommand("show", objectName, lineNumber));
+                {
+                    var visibilityObject = objects.FirstOrDefault(candidate =>
+                        string.Equals(candidate.Name, visibilityTarget, StringComparison.OrdinalIgnoreCase));
+                    if (visibilityObject is null)
+                    {
+                        Add(RuntimeDiagnosticSeverity.Error, $"Объект «{visibilityTarget}» не найден в этой сцене.");
+                    }
+                    else
+                    {
+                        commands.Add(new RuntimeCommand(visibleState ? "show" : "hide", visibilityObject.Name, lineNumber,
+                            TargetObjectId: visibilityObject.Id));
+                    }
+                }
+                continue;
+            }
+
+            if (ScriptCommandSyntax.TryParseAsk(line, out var askQuestion, out var askVariable, out var askError))
+            {
+                if (askError is not null)
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, askError);
+                }
+                else if (!ScriptCommandSyntax.ValidateVariableName(askVariable, out var askNameError))
+                {
+                    Add(RuntimeDiagnosticSeverity.Error, askNameError!);
+                }
+                else
+                {
+                    commands.Add(new RuntimeCommand("ask", $"{askQuestion} {askVariable}", lineNumber));
+                }
                 continue;
             }
 
             Add(RuntimeDiagnosticSeverity.Error, $"Неизвестная или пока неподдерживаемая команда «{line.Split(' ', 2)[0]}».");
         }
 
+        if (requiredEventEnd is not null)
+        {
+            AddAtLine(RuntimeDiagnosticSeverity.Error,
+                $"Для блока «{requiredEventEnd}» не найдена команда «Конец».", requiredEventLine);
+        }
+
+        foreach (var openBlock in flow.OpenBlocks)
+        {
+            diagnostics.Add(new RuntimeDiagnostic(RuntimeDiagnosticSeverity.Error,
+                $"Для блока «{openBlock.Name}» не найдена команда «Конец».",
+                scene.Name, item.Name, openBlock.Line, scene.Id, item.Id));
+        }
+
+        if (commandsOutsideEvent)
+        {
+            AddAtLine(RuntimeDiagnosticSeverity.Warning,
+                "Команды вне событий пропущены. Чтобы выполнить команды при старте, помести их в «При. запуске».", 1);
+        }
+
         return commands;
 
         void Add(RuntimeDiagnosticSeverity severity, string message) => diagnostics.Add(
             new RuntimeDiagnostic(severity, message, scene.Name, item.Name, lineNumber, scene.Id, item.Id));
+
+        void AddAtLine(RuntimeDiagnosticSeverity severity, string message, int diagnosticLine) => diagnostics.Add(
+            new RuntimeDiagnostic(severity, message, scene.Name, item.Name, diagnosticLine, scene.Id, item.Id));
+
+        void ValidateConditionReferences(string conditionExpression)
+        {
+            (List<string> TouchedObjectNames, List<string> KeyboardKeys) references;
+            try
+            {
+                references = ConditionalDirectiveParser.ExtractPropertyReferences(conditionExpression);
+            }
+            catch (FormatException)
+            {
+                return;
+            }
+            foreach (var objectName in references.TouchedObjectNames)
+            {
+                if (!objects.Any(candidate => string.Equals(candidate.Name, objectName, StringComparison.OrdinalIgnoreCase)))
+                    Add(RuntimeDiagnosticSeverity.Error,
+                        $"В условии «Свойство.коснулся.{objectName}» объект «{objectName}» не найден в этой сцене.");
+            }
+            foreach (var keyToken in references.KeyboardKeys)
+            {
+                if (!KeyboardKeySyntax.TryNormalize(keyToken, out _))
+                    Add(RuntimeDiagnosticSeverity.Error,
+                        $"В условии клавиша «{keyToken}» не распознана. Подходят: {KeyboardKeySyntax.AllowedKeysHint}.");
+            }
+        }
     }
 
     private string? FindResource(IskraProject project, IskraScene scene, Guid ownerId, string resourceType,
         string reference, IReadOnlyList<IskraObject> objects)
     {
-        var fileName = reference;
-        var dot = reference.IndexOf('.');
-        if (dot > 0)
-        {
-            var owner = objects.FirstOrDefault(value =>
-                string.Equals(value.Name, reference[..dot], StringComparison.OrdinalIgnoreCase));
-            if (owner is not null)
-            {
-                ownerId = owner.Id;
-                fileName = reference[(dot + 1)..];
-            }
-        }
         var extensions = resourceType == "sprites" ? ProjectContentStore.ImageExtensions : ProjectContentStore.AudioExtensions;
-        var directory = contentStore.GetObjectResourceDirectory(project, scene, ownerId, resourceType);
+        var localFiles = ProjectContentStore.ListResourceFiles(
+            contentStore.GetObjectResourceDirectory(project, scene, ownerId, resourceType), extensions);
+        var resolved = ImageCommandSyntax.ResolveReference(reference, ownerId, objects,
+            fileName => localFiles.Any(path => string.Equals(Path.GetFileName(path), fileName, StringComparison.OrdinalIgnoreCase)));
+        var directory = contentStore.GetObjectResourceDirectory(project, scene, resolved.OwnerId, resourceType);
         return ProjectContentStore.ListResourceFiles(directory, extensions).FirstOrDefault(path =>
-            string.Equals(Path.GetFileName(path), fileName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(Path.GetFileName(path), resolved.FileName, StringComparison.OrdinalIgnoreCase));
     }
 
     private string GetProjectCacheDirectory(IskraProject project)
@@ -504,11 +948,12 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
         foreach (var scene in project.Scenes)
         {
             content.Append('|').Append(scene.Id).Append(':').Append(scene.Name);
-            var scriptIds = scene.Objects.Select(item => item.Id).Append(IskraObject.BackgroundId);
-            foreach (var objectId in scriptIds)
+            var scriptObjects = scene.Objects.Select(item => (Id: item.Id, Name: item.Name))
+                .Append((Id: IskraObject.BackgroundId, Name: "Фон"));
+            foreach (var (objectId, objectName) in scriptObjects)
             {
                 var scriptPath = contentStore.GetObjectScriptPath(project, scene, objectId);
-                content.Append('|').Append(objectId).Append(':');
+                content.Append('|').Append(objectId).Append(':').Append(objectName).Append(':');
                 if (File.Exists(scriptPath)) content.Append(File.ReadAllText(scriptPath));
                 foreach (var resourceType in new[] { "sprites", "sounds" })
                 {
@@ -530,39 +975,61 @@ internal sealed class ProjectRuntime(ProjectStore projectStore, ProjectContentSt
 
     private static bool IsQuoted(string value) => value.Length >= 2 && value[0] == '"' && value[^1] == '"';
 
-    private static string ResolveValue(string source, IReadOnlyDictionary<string, string> variables)
+    private static bool IsBooleanLiteral(string value) =>
+        value.Equals("истина", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("ложь", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("нет", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("true", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("false", StringComparison.OrdinalIgnoreCase);
+
+    internal static string ResolveValue(string source, IReadOnlyDictionary<string, string> variables)
     {
-        var parts = source.Split("..", StringSplitOptions.None);
+        var parts = new List<string>();
+        var start = 0;
+        var inQuotes = false;
+        for (var index = 0; index < source.Length; index++)
+        {
+            if (inQuotes && source[index] == '\\' && index + 1 < source.Length &&
+                (source[index + 1] == '"' || source[index + 1] == '\\'))
+            {
+                index++;
+            }
+            else if (source[index] == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (!inQuotes && source[index] == '.' && index + 1 < source.Length && source[index + 1] == '.')
+            {
+                parts.Add(source[start..index]);
+                start = index + 2;
+                index++;
+            }
+        }
+        parts.Add(source[start..]);
         var output = new StringBuilder();
         foreach (var part in parts)
         {
             var value = part.Trim();
             if (IsQuoted(value)) output.Append(value[1..^1]);
             else if (long.TryParse(value, out _)) output.Append(value);
-            else output.Append(variables.GetValueOrDefault(value, value));
+            else output.Append(ConditionalDirectiveParser.ResolveVariable(value, variables));
         }
         return output.ToString();
     }
 
     private static bool TryResolveSound(string source, CompiledObject item, CompiledScene scene, IskraProject project,
-        ProjectContentStore contentStore, IReadOnlyDictionary<Guid, Dictionary<string, string>> variables, out string path)
+        ProjectContentStore contentStore, IReadOnlyDictionary<string, string> variables, out string path)
     {
-        var reference = variables[item.Id].TryGetValue(source, out var value) ? value : source;
-        var ownerId = item.Id;
-        var dot = reference.IndexOf('.');
-        if (dot > 0)
-        {
-            var owner = scene.Objects.FirstOrDefault(candidate =>
-                string.Equals(candidate.Name, reference[..dot], StringComparison.OrdinalIgnoreCase));
-            if (owner is not null)
-            {
-                ownerId = owner.Id;
-                reference = reference[(dot + 1)..];
-            }
-        }
-        var directory = contentStore.GetObjectResourceDirectory(project, project.Scenes.First(value => value.Id == scene.Id), ownerId, "sounds");
+        var reference = variables.TryGetValue(source, out var value) ? value : source;
+        var sourceScene = project.Scenes.First(value => value.Id == scene.Id);
+        var localSoundFiles = ProjectContentStore.ListResourceFiles(
+            contentStore.GetObjectResourceDirectory(project, sourceScene, item.Id, "sounds"), ProjectContentStore.AudioExtensions);
+        var objectReferences = scene.Objects.Select(candidate => new IskraObject { Id = candidate.Id, Name = candidate.Name }).ToArray();
+        var resolved = ImageCommandSyntax.ResolveReference(reference, item.Id, objectReferences,
+            fileName => localSoundFiles.Any(candidate => string.Equals(Path.GetFileName(candidate), fileName, StringComparison.OrdinalIgnoreCase)));
+        var directory = contentStore.GetObjectResourceDirectory(project, sourceScene, resolved.OwnerId, "sounds");
         path = ProjectContentStore.ListResourceFiles(directory, ProjectContentStore.AudioExtensions)
-            .FirstOrDefault(candidate => string.Equals(Path.GetFileName(candidate), reference, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+            .FirstOrDefault(candidate => string.Equals(Path.GetFileName(candidate), resolved.FileName, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
         return path.Length > 0;
     }
 

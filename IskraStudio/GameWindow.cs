@@ -29,13 +29,12 @@ internal sealed class GameWindow : Window
             ClipToBounds = true
         };
 
-        var viewbox = new Viewbox
+        Content = new Viewbox
         {
             Stretch = Stretch.Uniform,
             Child = SceneSurface,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch
         };
-        Content = new Grid { Background = Brushes.Black, Children = { viewbox } };
     }
 }

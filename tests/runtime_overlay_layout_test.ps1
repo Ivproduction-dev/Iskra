@@ -46,3 +46,25 @@ if ($mainWindowCode -notmatch 'if \(showingDetail\)\s*\{\s*AddToCurrentDetail\(\
 }
 
 Write-Output 'Passed: object resource addition uses the same centered plus/run group and routes by active tab.'
+
+foreach ($name in 'CreateProjectOverlay', 'EntityDialogOverlay', 'RenameConfirmOverlay', 'DeleteEntryOverlay') {
+    $dialog = $xaml.SelectSingleNode("//w:*[@x:Name='$name']", $namespaces)
+    if ($null -eq $dialog -or $null -eq $dialog.SelectSingleNode('.//w:ScrollViewer', $namespaces)) {
+        throw "Dialog '$name' must scroll when its contents exceed the available window height."
+    }
+}
+
+$sceneEditorCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.SceneEditor.cs') -Raw
+if ($sceneEditorCode -notmatch 'Style = \(Style\)FindResource\("ProjectCardButton"\)' -or
+    $sceneEditorCode -notmatch 'AutomationProperties\.SetName\(openButton, automationName\)' -or
+    $sceneEditorCode -notmatch 'TextTrimming = TextTrimming\.CharacterEllipsis' -or
+    $sceneEditorCode -notmatch 'ToolTip = name') {
+    throw 'Object rows must open through an accessible keyboard-focusable button and truncate long names with a tooltip.'
+}
+
+$projectRows = $xaml.SelectNodes("//w:*[@x:Name='ProjectItems']//w:TextBlock[@Text='{Binding Name}']", $namespaces)
+if ($projectRows.Count -eq 0 -or $projectRows[0].GetAttribute('TextTrimming') -ne 'CharacterEllipsis') {
+    throw 'Project names must truncate instead of overflowing their row.'
+}
+
+Write-Output 'Passed: dialogs scroll, object rows support keyboard activation, and long names truncate.'

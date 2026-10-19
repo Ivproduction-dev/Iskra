@@ -40,6 +40,7 @@ public partial class MainWindow
         FlushScriptSave();
         var project = activeProject;
         AppLog.Write($"Запуск проекта начат: {project.Name}.");
+        EditorRunOverlay.Visibility = Visibility.Collapsed;
         SetRuntimeLaunchState("Проверяем все сценарии проекта…", loading: true);
         RuntimeLaunchOverlay.Visibility = Visibility.Visible;
         UpdateWorkspaceModalLayer();
@@ -51,6 +52,7 @@ public partial class MainWindow
             if (!ReferenceEquals(activeProject, project))
             {
                 RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
+                EditorRunOverlay.Visibility = Visibility.Collapsed;
                 UpdateWorkspaceModalLayer();
                 return;
             }
@@ -60,6 +62,7 @@ public partial class MainWindow
             {
                 StopRuntimeFacts();
                 RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
+                EditorRunOverlay.Visibility = Visibility.Collapsed;
                 UpdateWorkspaceModalLayer();
                 openingDiagnosticFromLaunch = true;
                 OpenDiagnosticsDialog();
@@ -69,8 +72,10 @@ public partial class MainWindow
             var scene = activeScene is not null && project.Scenes.Any(item => item.Id == activeScene.Id)
                 ? project.Scenes.First(item => item.Id == activeScene.Id)
                 : project.Scenes[0];
+            runtimeDebugPanel.BeginRun();
             SetRuntimeLaunchState("Открываем игровое окно…", loading: true);
             var gameWindow = new GameWindow(project.Orientation) { Owner = this };
+            PositionGameWindowBesideEditor(gameWindow);
             runningGameWindow = gameWindow;
             runningGameCancellation = new CancellationTokenSource();
             gameWindow.Closed += (_, _) =>
@@ -81,17 +86,28 @@ public partial class MainWindow
                 runningGameWindow = null;
                 StopRuntimeFacts();
                 RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
+                EditorRunOverlay.Visibility = Visibility.Collapsed;
                 UpdateWorkspaceModalLayer();
             };
             gameWindow.Show();
-            SetRuntimeLaunchState("Закройте окно игры, чтобы продолжить разработку", loading: false);
-            _ = ProjectRuntime.RunSceneAsync(compilation.Project, scene, project, projectContentStore, gameWindow.SceneSurface,
-                text => System.Diagnostics.Debug.WriteLine(text), runningGameCancellation.Token);
+            RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
+            EditorRunStatus.Text = "Закройте окно игры, чтобы продолжить разработку";
+            EditorRunOverlay.Visibility = Visibility.Visible;
+            var runtimeTask = projectRuntime.RunSceneAsync(compilation.Project, scene, project, gameWindow.SceneSurface,
+                runtimeDebugPanel.AddOutput,
+                runtimeDebugPanel.UpdateVariables,
+                runningGameCancellation.Token);
+            _ = runtimeTask.ContinueWith(
+                task => AppLog.Write("Выполнение сцены прервано из-за ошибки.", task.Exception!),
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted,
+                TaskScheduler.Default);
         }
         catch (Exception exception)
         {
             StopRuntimeFacts();
             RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
+            EditorRunOverlay.Visibility = Visibility.Collapsed;
             UpdateWorkspaceModalLayer();
             AppLog.Write("Не удалось запустить проект.", exception);
             SetProjectDiagnostics(
@@ -102,6 +118,18 @@ public partial class MainWindow
             openingDiagnosticFromLaunch = true;
             OpenDiagnosticsDialog();
         }
+    }
+
+    private void PositionGameWindowBesideEditor(GameWindow gameWindow)
+    {
+        var workArea = SystemParameters.WorkArea;
+        var debugStripWidth = 420d;
+        var gameLeft = Math.Clamp(Left + debugStripWidth, workArea.Left, workArea.Right - gameWindow.MinWidth);
+        gameWindow.WindowStartupLocation = WindowStartupLocation.Manual;
+        gameWindow.Left = gameLeft;
+        gameWindow.Top = Math.Clamp(Top, workArea.Top, workArea.Bottom - Math.Min(gameWindow.Height, workArea.Height));
+        gameWindow.Width = Math.Min(gameWindow.Width, workArea.Right - gameLeft);
+        gameWindow.Height = Math.Min(gameWindow.Height, workArea.Height);
     }
 
     private void SetRuntimeLaunchState(string message, bool loading)

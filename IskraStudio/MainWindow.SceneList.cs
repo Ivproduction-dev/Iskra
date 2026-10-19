@@ -23,7 +23,7 @@ public partial class MainWindow
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = "Список сцен";
-        WorkspaceBackButton.Content = "←  Проекты";
+        WorkspaceBackButton.Content = CreateIconContent("arrowleft", "Проекты");
         WorkspaceMenuButton.ToolTip = "Действия со сценами";
         WorkspaceMenuButton.Visibility = Visibility.Visible;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
@@ -105,7 +105,9 @@ public partial class MainWindow
             FontSize = 19,
             FontWeight = FontWeights.SemiBold,
             Foreground = BrushFor("InkBrush"),
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            ToolTip = scene.Name
         };
         main.Children.Add(name);
         openButton.Content = main;
@@ -132,12 +134,11 @@ public partial class MainWindow
             BorderBrush = BrushFor(isSelected ? "AccentBrush" : "MutedBrush"),
             BorderThickness = new Thickness(1.5),
             Background = isSelected ? BrushFor("AccentBrush") : BrushFor("PanelBrush"),
-            Child = isSelected ? new TextBlock
+            Child = isSelected ? new Image
             {
-                Text = "✓",
-                FontSize = 13,
-                FontWeight = FontWeights.Bold,
-                Foreground = BrushFor("OnAccentBrush"),
+                Source = (System.Windows.Media.ImageSource)FindResource("Icon.Check"),
+                Width = 13,
+                Height = 13,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             } : null
@@ -150,8 +151,7 @@ public partial class MainWindow
             Width = 44,
             Height = 52,
             Padding = new Thickness(0),
-            Content = "⋮",
-            FontSize = 20,
+            Content = CreateSheetIcon("dots", 18),
             ToolTip = $"Действия со сценой {scene.Name}",
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
@@ -198,7 +198,6 @@ public partial class MainWindow
 
         workspaceSelectionMode = WorkspaceSelectionMode.DeleteScenes;
         selectedSceneIds.Clear();
-        WorkspaceConfirmSelectionButton.Content = "✓";
         WorkspaceConfirmSelectionButton.ToolTip = "Удалить";
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Visible;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Visible;
@@ -217,7 +216,6 @@ public partial class MainWindow
 
         workspaceSelectionMode = WorkspaceSelectionMode.RenameScene;
         selectedSceneIds.Clear();
-        WorkspaceConfirmSelectionButton.Content = "✓";
         WorkspaceConfirmSelectionButton.ToolTip = "Переименовать выбранную сцену";
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Visible;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Visible;

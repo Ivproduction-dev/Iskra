@@ -385,8 +385,7 @@ public partial class MainWindow
             var menuButton = new Button
             {
                 Style = (Style)FindResource("ToolButton"),
-                Content = "⋮",
-                FontSize = 18,
+                Content = CreateSheetIcon("dots", 16),
                 Padding = new Thickness(8, 2, 8, 2),
                 VerticalAlignment = VerticalAlignment.Center,
                 ToolTip = "Действия со шрифтом"
@@ -614,8 +613,9 @@ public partial class MainWindow
             y += lineHeight;
         }
         var pad = paintOutlineWidth + 2;
-        var width = Math.Max(1, (int)Math.Ceiling(maxWidth - minX + pad * 2));
-        var height = Math.Max(1, (int)Math.Ceiling(y + pad * 2));
+        var maxRenderSide = MaxPaintSide * 8;
+        var width = Math.Min(Math.Max(1, (int)Math.Ceiling(maxWidth - minX + pad * 2)), maxRenderSide);
+        var height = Math.Min(Math.Max(1, (int)Math.Ceiling(y + pad * 2)), maxRenderSide);
         var visual = new DrawingVisual();
         using (var context = visual.RenderOpen())
         {
@@ -635,27 +635,37 @@ public partial class MainWindow
                 context.DrawText(formatted, origin);
             }
         }
-        var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(visual);
-        bitmap.Freeze();
-        var pixels = new int[width * height];
-        bitmap.CopyPixels(pixels, width * 4, 0);
-        for (var i = 0; i < pixels.Length; i++)
+        try
         {
-            var pixel = pixels[i];
-            var alpha = (pixel >> 24) & 0xFF;
-            if (alpha == 0 || alpha == 255)
+            var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(visual);
+            bitmap.Freeze();
+            var pixels = new int[width * height];
+            bitmap.CopyPixels(pixels, width * 4, 0);
+            for (var i = 0; i < pixels.Length; i++)
             {
-                continue;
+                var pixel = pixels[i];
+                var alpha = (pixel >> 24) & 0xFF;
+                if (alpha == 0 || alpha == 255)
+                {
+                    continue;
+                }
+                var r = (((pixel >> 16) & 0xFF) * 255 + alpha / 2) / alpha;
+                var g = (((pixel >> 8) & 0xFF) * 255 + alpha / 2) / alpha;
+                var b = ((pixel & 0xFF) * 255 + alpha / 2) / alpha;
+                pixels[i] = (alpha << 24) | (Math.Min(r, 255) << 16) | (Math.Min(g, 255) << 8) | Math.Min(b, 255);
             }
-            var r = (((pixel >> 16) & 0xFF) * 255 + alpha / 2) / alpha;
-            var g = (((pixel >> 8) & 0xFF) * 255 + alpha / 2) / alpha;
-            var b = ((pixel & 0xFF) * 255 + alpha / 2) / alpha;
-            pixels[i] = (alpha << 24) | (Math.Min(r, 255) << 16) | (Math.Min(g, 255) << 8) | Math.Min(b, 255);
+            paintTextCacheWidth = width;
+            paintTextCacheHeight = height;
+            return (pixels, width, height);
         }
-        paintTextCacheWidth = width;
-        paintTextCacheHeight = height;
-        return (pixels, width, height);
+        catch (OutOfMemoryException exception)
+        {
+            AppLog.Write("Не удалось растеризовать текст: не хватило памяти.", exception);
+            paintTextCacheWidth = 1;
+            paintTextCacheHeight = 1;
+            return (new int[1], 1, 1);
+        }
     }
 
     private static void BlitPaintText(int[] destination, int destinationWidth, int destinationHeight, int[] source, int sourceWidth, int sourceHeight, int left, int top)
@@ -822,6 +832,7 @@ public partial class MainWindow
         }
         paintRedoStack.Clear();
         paintTextBase = null;
+        paintingDirty = true;
         UpdatePaintChrome();
     }
 
@@ -947,7 +958,11 @@ public partial class MainWindow
         paintRedoStack.Clear();
         paintTool = PaintTool.Brush;
         shapeFrameActive = false;
+        paintShapeBase = null;
+        paintShapeStamped = false;
+        paintShape = PaintShape.Rectangle;
         paintTextPlaced = false;
+        paintTextRotation = 0;
         paintTextScaleX = 1;
         paintTextScaleY = 1;
         paintTextBase = null;
@@ -961,7 +976,7 @@ public partial class MainWindow
 
         showingPainting = true;
         WorkspaceTitle.Text = "Рисовалка";
-        WorkspaceBackButton.Content = "←  " + item.Name;
+        WorkspaceBackButton.Content = CreateIconContent("arrowleft", item.Name);
         WorkspaceMenuButton.Visibility = Visibility.Collapsed;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
@@ -1060,7 +1075,7 @@ public partial class MainWindow
         var saveButton = new Button
         {
             Style = (Style)FindResource("PrimaryButton"),
-            Content = "✓  Сохранить",
+            Content = CreateIconContent("check", "Сохранить"),
             FontSize = 13,
             FontWeight = FontWeights.SemiBold,
             Padding = new Thickness(14, 5, 14, 5),
@@ -1662,7 +1677,7 @@ public partial class MainWindow
         };
         if (icon is not null)
         {
-            button.Content = CreateSheetIcon(icon, 18, BrushFor("BodyBrush"));
+            button.Content = CreateSheetIcon(icon, 18);
         }
         else
         {
@@ -1731,6 +1746,10 @@ public partial class MainWindow
         }
         PushPaintUndo();
         Array.Clear(paintPixels, 0, paintPixels.Length);
+        paintTextBase = null;
+        paintShapeBase = null;
+        paintShapeStamped = false;
+        shapeFrameActive = false;
         UploadPaintPixels();
         paintingDirty = true;
     }
@@ -2289,7 +2308,7 @@ public partial class MainWindow
 
     private void StampPaintShape()
     {
-        PushPaintUndo();
+        PushShapeUndoSnapshot();
         if (paintShapeBase is not null)
         {
             RasterizeRotatedShape(paintShapeBase, paintShapeFilled);
@@ -2396,6 +2415,10 @@ public partial class MainWindow
         }
         if (tool == PaintTool.Shape)
         {
+            if (paintShape == PaintShape.Line)
+            {
+                paintShape = PaintShape.Rectangle;
+            }
             if (!shapeFrameActive)
             {
                 shapeFrameX = paintWidth / 2.0;
@@ -2418,7 +2441,7 @@ public partial class MainWindow
             {
                 if (!paintShapeStamped)
                 {
-                    PushPaintUndo();
+                    PushShapeUndoSnapshot();
                 }
                 paintShapeStamped = false;
                 paintShapeBase = null;
@@ -2587,7 +2610,7 @@ public partial class MainWindow
         var stampBtn = new Button
         {
             Style = (Style)FindResource("PrimaryButton"),
-            Content = "✓  Поставить текст (Enter)",
+            Content = CreateIconContent("check", "Поставить текст (Enter)"),
             FontSize = 12,
             HorizontalAlignment = HorizontalAlignment.Stretch,
             Padding = new Thickness(0, 7, 0, 7),
@@ -2640,7 +2663,7 @@ public partial class MainWindow
             BorderBrush = selected ? BrushFor("AccentBrush") : Brushes.Transparent,
             BorderThickness = new Thickness(selected ? 1.5 : 0)
         };
-        var iconElement = CreateSheetIcon(icon, 22, BrushFor(selected ? "AccentBrush" : "BodyBrush"));
+        var iconElement = CreateSheetIcon(icon, 22);
         button.Content = iconElement;
         button.Click += (_, _) => SelectPaintTool(tool);
         AutomationProperties.SetName(button, label);
@@ -2779,7 +2802,7 @@ public partial class MainWindow
                 var stampButton = new Button
                 {
                     Style = (Style)FindResource("PrimaryButton"),
-                    Content = "✓  Поставить фигуру (Enter)",
+                    Content = CreateIconContent("check", "Поставить фигуру (Enter)"),
                     FontSize = 12,
                     Padding = new Thickness(10, 4, 10, 4),
                     ToolTip = "Нанести фигуру на холст (Enter)"
@@ -2802,7 +2825,7 @@ public partial class MainWindow
                 var textStampButton = new Button
                 {
                     Style = (Style)FindResource("PrimaryButton"),
-                    Content = "✓  Поставить текст (Enter)",
+                    Content = CreateIconContent("check", "Поставить текст (Enter)"),
                     FontSize = 12,
                     Padding = new Thickness(10, 4, 10, 4),
                     ToolTip = "Нанести текст на холст (Enter)"
@@ -2839,7 +2862,7 @@ public partial class MainWindow
     private StackPanel CreateToolBadge(string icon, string label)
     {
         var badge = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        badge.Children.Add(CreateSheetIcon(icon, 18, BrushFor("AccentBrush")));
+        badge.Children.Add(CreateSheetIcon(icon, 18));
         badge.Children.Add(new TextBlock
         {
             Text = label,
@@ -2875,7 +2898,7 @@ public partial class MainWindow
             BorderThickness = new Thickness(selected ? 1 : 0)
         };
         var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        row.Children.Add(CreateSheetIcon(icon, 16, BrushFor(selected ? "AccentBrush" : "BodyBrush")));
+        row.Children.Add(CreateSheetIcon(icon, 16));
         row.Children.Add(new TextBlock
         {
             Text = label,
@@ -3222,9 +3245,7 @@ public partial class MainWindow
         pipetteButton.Click += (_, _) =>
         {
             WorkspaceContentHost.Children.Remove(overlay);
-            paintTool = PaintTool.Pipette;
-            RebuildPaintTools();
-            RebuildPaintOptions();
+            SelectPaintTool(PaintTool.Pipette);
         };
         pipetteButton.Visibility = paintDialogPipette ? Visibility.Visible : Visibility.Collapsed;
         layout.Children.Add(pipetteButton);
@@ -3803,6 +3824,17 @@ public partial class MainWindow
         UpdatePaintChrome();
     }
 
+    private void PushShapeUndoSnapshot()
+    {
+        paintUndoStack.Add((int[])(paintShapeBase ?? paintPixels).Clone());
+        if (paintUndoStack.Count > MaxPaintUndo)
+        {
+            paintUndoStack.RemoveAt(0);
+        }
+        paintRedoStack.Clear();
+        UpdatePaintChrome();
+    }
+
     private void UndoPaint()
     {
         if (paintUndoStack.Count == 0)
@@ -3812,6 +3844,9 @@ public partial class MainWindow
         paintRedoStack.Add((int[])paintPixels.Clone());
         paintPixels = (int[])paintUndoStack[^1].Clone();
         paintUndoStack.RemoveAt(paintUndoStack.Count - 1);
+        paintTextBase = null;
+        paintShapeBase = null;
+        paintFrameAction = PaintFrameAction.None;
         paintingDirty = true;
         UploadPaintPixels();
         UpdatePaintChrome();
@@ -3826,6 +3861,9 @@ public partial class MainWindow
         paintUndoStack.Add((int[])paintPixels.Clone());
         paintPixels = (int[])paintRedoStack[^1].Clone();
         paintRedoStack.RemoveAt(paintRedoStack.Count - 1);
+        paintTextBase = null;
+        paintShapeBase = null;
+        paintFrameAction = PaintFrameAction.None;
         paintingDirty = true;
         UploadPaintPixels();
         UpdatePaintChrome();
@@ -4192,7 +4230,7 @@ public partial class MainWindow
                     {
                         if (shapeFrameActive && paintShapeBase is not null)
                         {
-                            PushPaintUndo();
+                            PushShapeUndoSnapshot();
                             paintShapeBase = (int[])paintPixels.Clone();
                         }
                         shapeFrameX = cell.X;
@@ -4233,9 +4271,10 @@ public partial class MainWindow
                         {
                             paintShapeBase = (int[])paintPixels.Clone();
                         }
+                        paintPixels = (int[])paintShapeBase.Clone();
+                        UploadPaintPixels();
                         paintShapeStamped = false;
                         paintViewport?.CaptureMouse();
-                        DrawRotatedShapePreview();
                         UpdatePaintFrame();
                     }
                     break;
@@ -4499,7 +4538,6 @@ public partial class MainWindow
                     return;
             }
             UpdatePaintFrame();
-            DrawRotatedShapePreview();
             return;
         }
 
@@ -4628,7 +4666,7 @@ public partial class MainWindow
         }
         else
         {
-            if (paintTool != PaintTool.Text)
+            if (paintTool != PaintTool.Text && paintTool != PaintTool.Shape)
             {
                 paintShapeBase = null;
             }
@@ -4667,8 +4705,26 @@ public partial class MainWindow
             }
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(paintBitmap));
-            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            encoder.Save(stream);
+            var temporaryPath = path + ".tmp";
+            try
+            {
+                using (var stream = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                {
+                    encoder.Save(stream);
+                }
+                File.Move(temporaryPath, path, overwrite: true);
+            }
+            catch
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch
+                {
+                }
+                throw;
+            }
             paintingPath = path;
             paintingDirty = false;
         }
@@ -4705,6 +4761,11 @@ public partial class MainWindow
                 StampPaintText();
                 e.Handled = true;
             }
+            return;
+        }
+
+        if (Keyboard.FocusedElement is TextBox)
+        {
             return;
         }
 

@@ -11,3 +11,5 @@
 .vs/
 IskraStudio/bin/
 IskraStudio/obj/
+tests/bin/
+tests/obj/

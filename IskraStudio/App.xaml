@@ -3,7 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <SolidColorBrush x:Key="CanvasBrush" Color="#FAF9F5" />
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Icons.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="CanvasBrush" Color="#FAF9F5" />
         <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF" />
         <SolidColorBrush x:Key="SoftBrush" Color="#F5F0E8" />
         <SolidColorBrush x:Key="SelectedBrush" Color="#EFE9DE" />
@@ -33,5 +37,6 @@
         <SolidColorBrush x:Key="SceneSunBrush" Color="#D9A85D" />
         <SolidColorBrush x:Key="SceneSunSoftBrush" Color="#F1E9D5" />
         <SolidColorBrush x:Key="SyntaxMintBrush" Color="#83B3A0" />
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -64,7 +64,7 @@ public partial class MainWindow
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = item.Name;
-        WorkspaceBackButton.Content = "←  " + scene.Name;
+        WorkspaceBackButton.Content = CreateIconContent("arrowleft", scene.Name);
         WorkspaceMenuButton.Visibility = Visibility.Collapsed;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
         WorkspaceCancelSelectionButton.Visibility = Visibility.Collapsed;
@@ -77,20 +77,16 @@ public partial class MainWindow
 
     private void StopDetailMedia()
     {
-        FlushScriptSave();
+        var scriptSaved = FlushScriptSave();
         detailScriptEditor = null;
         detailScriptStatus = null;
         detailScriptDirty = false;
-        try
-        {
-            soundPreviewPlayer.Stop();
-        }
-        catch
-        {
-        }
-        soundPreviewPath = null;
-        soundPreviewButton = null;
+        StopSoundPreview();
         StopRecording();
+        if (!scriptSaved)
+        {
+            ShowRuntimeToast("Не удалось сохранить скрипт объекта");
+        }
     }
 
     private void AddToCurrentDetail()
@@ -391,7 +387,7 @@ public partial class MainWindow
             HorizontalContentAlignment = HorizontalAlignment.Center
         };
         var cellContent = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
-        cellContent.Children.Add(CreateSheetIcon(icon, 26, BrushFor(selected ? "AccentBrush" : "BodyBrush")));
+        cellContent.Children.Add(CreateSheetIcon(icon, 26));
         cellContent.Children.Add(new TextBlock
         {
             Text = label,
@@ -429,9 +425,20 @@ public partial class MainWindow
             <SyntaxDefinition name="Искра" extensions=".isk" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
               <Color name="Keyword" foreground="#A9583E" fontWeight="bold" />
               <Color name="Number" foreground="#2F7947" />
+              <Color name="String" foreground="#2F7947" />
+              <Color name="Comment" foreground="#6C6A64" fontStyle="italic" />
+              <Color name="Operator" foreground="#386B88" fontWeight="bold" />
+              <Color name="Resource" foreground="#9270A8" />
               <RuleSet>
-                <Rule color="Keyword">(?i)\b(задать|присвоить|изменить|печать)\b</Rule>
-                <Rule color="Number">\b\d+\b</Rule>
+                <Rule color="Comment">^\s*[/]{2}.*$</Rule>
+                <Rule color="String">&quot;([^&quot;]|\\.)*&quot;</Rule>
+                <Rule color="Keyword">(?i)\bкак\.только\b</Rule>
+                <Rule color="Resource">[\p{L}_][\p{L}\p{N}_-]*(?:\.[\p{L}\p{N}_-]+)+</Rule>
+                <Rule color="Keyword">(?i)\b(при|запуске|нажатии|отпускании|наведении|задать|присвоить|изменить|печать|показать|спрятать|скрыть|поместить|подвинуть|воспроизвести|зациклить|остановить|звук|громкость|ждать|проиграть|спросить|каждые|каждый|кадр|клавиша|клавиши|право|лево|верх|вниз|пробел|ввод|отмена|забой|запустить|сцену|продолжить|сменить|ориентацию|горизонтальная|вертикальная|иначеесли|иначеесле|иначеэсли|если|есле|эсли|иначе|конец|то|и|или|не|нет|секунд\w*|минут\w*|час\w*|изображение|прозрачность|размер|яркость|когда|перед|назад|истина|ложь|true|false|свойство|коснулся)\b</Rule>
+                <Rule color="Keyword">(?i)\b(вечно|пока)\b</Rule>
+                <Rule color="Number">[+-]?(?:\d+(?:\.\d*)?|\.\d+)</Rule>
+                <Rule color="Operator">\.\.|=</Rule>
+                <Rule color="Keyword">(?i)\b(прервать)\b</Rule>
               </RuleSet>
             </SyntaxDefinition>
             """;
@@ -491,18 +498,69 @@ public partial class MainWindow
     private bool detailScriptDirty;
     private static readonly (string Label, string Command, string? Placeholder)[] ScriptCommandSuggestions =
     [
+        ("При. запуске", "При. запуске", null),
+        ("При. нажатии", "При. нажатии", null),
+        ("При. отпускании", "При. отпускании", null),
+        ("При. наведении", "При. наведении", null),
+        ("При. нажатии клавиши.пробел", "При. нажатии клавиши.пробел", "пробел"),
+        ("Каждые.2.секунды", "Каждые.2.секунды", "2"),
+        ("Каждый кадр", "Каждый кадр", null),
+        ("Когда. условие", "Когда. ", "условие"),
+        ("Как.Только условие", "Как.Только ", "условие"),
         ("Задать имя = значение", "Задать имя = ", "имя"),
         ("Присвоить имя = значение", "Присвоить имя = ", "имя"),
         ("Задать изображение.", "Задать изображение. ", null),
         ("Присвоить изображение.", "Присвоить изображение. ", null),
+        ("Задать прозрачность. 100", "Задать прозрачность. ", "100"),
+        ("Изменить прозрачность. 10", "Изменить прозрачность. ", "10"),
+        ("Задать размер. 100", "Задать размер. ", "100"),
+        ("Изменить размер. 10", "Изменить размер. ", "10"),
+        ("Задать яркость. 100", "Задать яркость. ", "100"),
+        ("Изменить яркость. 10", "Изменить яркость. ", "10"),
         ("Изменить имя число", "Изменить имя ", "имя"),
+        ("Задать Свойство.х = 0", "Задать Свойство.х = 0", "0"),
+        ("Изменить Свойство.х 5", "Изменить Свойство.х 5", "5"),
+        ("Подвинуть. 10 -5", "Подвинуть. 10 -5", "10 -5"),
         ("Изменить изображение. перед", "Изменить изображение. перед", null),
         ("Изменить изображение. назад", "Изменить изображение. назад", null),
+        ("Изменить изображение. объект.перед", "Изменить изображение. объект.перед", null),
+        ("Изменить изображение. объект.назад", "Изменить изображение. объект.назад", null),
         ("Поместить X Y", "Поместить X Y", "X Y"),
+        ("Ждать 1 секунду", "Ждать 1 секунду", "1 секунду"),
+        ("Если условие то", "Если условие то", "условие"),
+        ("Есле условие то", "Есле условие то", "условие"),
+        ("Эсли условие то", "Эсли условие то", "условие"),
+        ("Иначе если условие то", "Иначе если условие то", "условие"),
+        ("Иначеесли условие то", "Иначеесли условие то", "условие"),
+        ("Иначеесле условие то", "Иначеесле условие то", "условие"),
+        ("Иначеэсли условие то", "Иначеэсли условие то", "условие"),
+        ("Пока условие то", "Пока условие то", "условие"),
+        ("Вечно", "Вечно", null),
+        ("Прервать", "Прервать", null),
+        ("Иначе", "Иначе", null),
+        ("Конец", "Конец", null),
         ("Печать значение", "Печать ", null),
-        ("Показать объект", "Показать ", null),
+        ("Спрятать (свой объект)", "Спрятать", null),
+        ("Скрыть (свой объект)", "Скрыть", null),
+        ("Показать (свой объект)", "Показать", null),
+        ("Спрятать.объект", "Спрятать.объект", "объект"),
+        ("Скрыть.объект", "Скрыть.объект", "объект"),
+        ("Показать.объект", "Показать.объект", "объект"),
         ("Воспроизвести звук.", "Воспроизвести звук. ", null),
-        ("Воспроизвести звук ждать.", "Воспроизвести звук ждать. ", null)
+        ("Воспроизвести звук ждать.", "Воспроизвести звук ждать. ", null),
+        ("Зациклить звук.файл.mp3", "Зациклить звук.файл.mp3", "файл.mp3"),
+        ("Остановить звук.файл.mp3", "Остановить звук.файл.mp3", "файл.mp3"),
+        ("Задать громкость. 50", "Задать громкость. 50", "50"),
+        ("Задать громкость.файл.mp3 50", "Задать громкость.файл.mp3 50", "50"),
+        ("Проиграть изображение. 8", "Проиграть изображение. 8", "8"),
+        ("Проиграть изображение.объект 8", "Проиграть изображение.объект 8", "объект"),
+        ("Остановить изображение.", "Остановить изображение.", null),
+        ("Запустить.сцену.название", "Запустить.сцену.название", "название"),
+        ("Продолжить.сцену.название", "Продолжить.сцену.название", "название"),
+        ("Сменить.ориентацию", "Сменить.ориентацию", null),
+        ("Сменить.ориентацию.вертикальная", "Сменить.ориентацию.вертикальная", null),
+        ("Сменить.ориентацию.горизонтальная", "Сменить.ориентацию.горизонтальная", null),
+        ("Спросить. \"вопрос?\" имя", "Спросить. ", null)
     ];
 
     private void BuildScriptsPage(StackPanel content)
@@ -553,7 +611,8 @@ public partial class MainWindow
         {
             Margin = new Thickness(0, 10, 0, 0),
             FontSize = 12,
-            Foreground = BrushFor("MutedBrush")
+            Foreground = BrushFor("ErrorBrush"),
+            Visibility = Visibility.Collapsed
         };
         detailScriptStatus = status;
         detailScriptEditor = editor;
@@ -628,7 +687,15 @@ public partial class MainWindow
             editor.Document.Replace(replacementOffset, replacementLength, command);
             if (suggestion.Placeholder is { } placeholder)
             {
-                editor.Select(replacementOffset + command.IndexOf(placeholder, StringComparison.Ordinal), placeholder.Length);
+                var placeholderIndex = command.IndexOf(placeholder, StringComparison.Ordinal);
+                if (placeholderIndex >= 0)
+                {
+                    editor.Select(replacementOffset + placeholderIndex, placeholder.Length);
+                }
+                else
+                {
+                    editor.CaretOffset = replacementOffset + command.Length;
+                }
             }
             else
             {
@@ -733,28 +800,30 @@ public partial class MainWindow
         editor.Unloaded += (_, _) => popup.IsOpen = false;
     }
 
-    private void FlushScriptSave()
+    private bool FlushScriptSave()
     {
         detailSaveTimer?.Stop();
         if (!detailScriptDirty || detailScriptEditor is null || activeProject is null || detailScene is null || detailItem is null)
         {
-            return;
+            return true;
         }
         if (projectContentStore.TryWriteObjectScript(activeProject, detailScene, detailItem.Id, detailScriptEditor.Text, out var error))
         {
             detailScriptDirty = false;
             if (detailScriptStatus is not null)
             {
-                detailScriptStatus.Text = "Сохранено " + DateTime.Now.ToString("HH:mm:ss");
-                detailScriptStatus.Foreground = BrushFor("SuccessBrush");
+                detailScriptStatus.Text = string.Empty;
+                detailScriptStatus.Visibility = Visibility.Collapsed;
             }
             RefreshProjectDiagnostics();
+            return true;
         }
-        else if (detailScriptStatus is not null)
+        if (detailScriptStatus is not null)
         {
             detailScriptStatus.Text = error ?? "Не удалось сохранить скрипт.";
-            detailScriptStatus.Foreground = BrushFor("ErrorBrush");
+            detailScriptStatus.Visibility = Visibility.Visible;
         }
+        return false;
     }
 
     private void BuildImagesPage(StackPanel content)
@@ -813,7 +882,7 @@ public partial class MainWindow
         };
     }
 
-    private void ShowSpriteNameDialog(string title, string subtitle, string buttonLabel, Action<string> next)
+    private void ShowSpriteNameDialog(string title, string subtitle, string buttonLabel, Action<string> next, string initialName = "")
     {
         var overlay = new Grid
         {
@@ -854,6 +923,7 @@ public partial class MainWindow
             Style = (Style)FindResource("ProjectTextBox"),
             MinHeight = 44,
             MaxLength = 50,
+            Text = initialName,
             ToolTip = "Например, Герой"
         };
         layout.Children.Add(nameBox);
@@ -914,7 +984,11 @@ public partial class MainWindow
             next(name);
         };
         WorkspaceContentHost.Children.Add(overlay);
-        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() => nameBox.Focus()));
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
+        {
+            nameBox.Focus();
+            nameBox.SelectAll();
+        }));
     }
 
     private void ImportImagesNamed(string name)
@@ -1034,7 +1108,25 @@ public partial class MainWindow
                 StartPainting(detailScene, detailItem, path);
             }
         };
-        layout.Children.Add(imageBox);
+        var imageFrame = new Grid { Height = 100 };
+        imageFrame.Children.Add(imageBox);
+        var actionsButton = new Button
+        {
+            Style = (Style)FindResource("ToolButton"),
+            Width = 28,
+            Height = 28,
+            Padding = new Thickness(0),
+            Content = CreateSheetIcon("dots", 16),
+            Background = BrushFor("PanelBrush"),
+            Opacity = 0.94,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 4, 4, 0),
+            ToolTip = "Действия с образом"
+        };
+        AutomationProperties.SetName(actionsButton, $"Действия с образом {Path.GetFileName(path)}");
+        imageFrame.Children.Add(actionsButton);
+        layout.Children.Add(imageFrame);
         var nameRow = new DockPanel { LastChildFill = true, Margin = new Thickness(0, 8, 0, 0) };
         var name = new TextBlock
         {
@@ -1054,43 +1146,192 @@ public partial class MainWindow
             }
 
             e.Handled = true;
-            try
-            {
-                Clipboard.SetText(Path.GetFileName(path));
-                ShowRuntimeToast("Имя файла скопировано");
-            }
-            catch (Exception exception) when (exception is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
-            {
-                AppLog.Write("Не удалось скопировать имя файла образа.", exception);
-                ShowRuntimeToast("Не удалось скопировать имя файла");
-            }
+            CopyImageName(path);
         };
         nameRow.Children.Add(name);
-        var deleteButton = new Button
+        var actionsPopup = new Popup
         {
-            Style = (Style)FindResource("ToolButton"),
-            Content = "×",
-            FontSize = 14,
-            Padding = new Thickness(6, 0, 6, 2),
-            ToolTip = "Удалить образ"
+            Placement = PlacementMode.Custom,
+            PlacementTarget = actionsButton,
+            AllowsTransparency = true,
+            StaysOpen = false,
+            PopupAnimation = PopupAnimation.None
         };
-        deleteButton.Click += (_, _) =>
+        var popupMotion = new TranslateTransform();
+        var popupCard = new Border
         {
-            try
-            {
-                File.Delete(path);
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-            {
-                AppLog.Write("Не удалось удалить образ.", exception);
-            }
-            BuildObjectDetail();
+            Width = 198,
+            Padding = new Thickness(6),
+            Background = BrushFor("PanelBrush"),
+            BorderBrush = BrushFor("HairlineBrush"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Opacity = 0,
+            RenderTransform = popupMotion
         };
-        DockPanel.SetDock(deleteButton, Dock.Right);
-        nameRow.Children.Add(deleteButton);
+        popupCard.Effect = new System.Windows.Media.Effects.DropShadowEffect
+        {
+            BlurRadius = 18,
+            ShadowDepth = 4,
+            Opacity = 0.2
+        };
+        var popupItems = new StackPanel();
+        popupItems.Children.Add(CreateImageActionItem("Скопировать образ", actionsPopup, () => CopyImage(path)));
+        popupItems.Children.Add(CreateImageActionItem("Скопировать имя", actionsPopup, () => CopyImageName(path)));
+        popupItems.Children.Add(CreateImageActionItem("Переименовать", actionsPopup, () => RenameImage(path)));
+        popupItems.Children.Add(new Border
+        {
+            Height = 1,
+            Background = BrushFor("HairlineSoftBrush"),
+            Margin = new Thickness(6, 4, 6, 4)
+        });
+        popupItems.Children.Add(CreateImageActionItem("Удалить", actionsPopup, () => DeleteImage(path), BrushFor("ErrorBrush")));
+        popupCard.Child = popupItems;
+        actionsPopup.Child = popupCard;
+
+        var opensAbove = false;
+        actionsPopup.CustomPopupPlacementCallback = (popupSize, targetSize, _) =>
+        {
+            var origin = actionsButton.PointToScreen(new Point(0, 0));
+            var transform = PresentationSource.FromVisual(actionsButton)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+            var originX = origin.X / transform.M11;
+            var originY = origin.Y / transform.M22;
+            var workArea = SystemParameters.WorkArea;
+            var roomBelow = workArea.Bottom - originY - targetSize.Height;
+            var roomAbove = originY - workArea.Top;
+            opensAbove = roomBelow < popupSize.Height && roomAbove > roomBelow;
+            var x = Math.Clamp(targetSize.Width - popupSize.Width,
+                workArea.Left - originX,
+                workArea.Right - originX - popupSize.Width);
+            var y = opensAbove ? -popupSize.Height : targetSize.Height;
+            return [new CustomPopupPlacement(new Point(x, y), PopupPrimaryAxis.None)];
+        };
+        actionsPopup.Opened += (_, _) =>
+        {
+            popupCard.BeginAnimation(UIElement.OpacityProperty, null);
+            popupMotion.BeginAnimation(TranslateTransform.YProperty, null);
+            popupCard.Opacity = 0;
+            var initialOffset = opensAbove ? 8 : -8;
+            popupMotion.Y = initialOffset;
+            var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+            popupCard.BeginAnimation(UIElement.OpacityProperty,
+                new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170)) { EasingFunction = easing });
+            popupMotion.BeginAnimation(TranslateTransform.YProperty,
+                new DoubleAnimation(initialOffset, 0, TimeSpan.FromMilliseconds(170)) { EasingFunction = easing });
+        };
+        actionsButton.Click += (_, _) =>
+        {
+            if (!actionsPopup.IsOpen)
+            {
+                actionsPopup.IsOpen = true;
+            }
+        };
         layout.Children.Add(nameRow);
         thumb.Child = layout;
         return thumb;
+    }
+
+    private Button CreateImageActionItem(string label, Popup popup, Action action, Brush? foreground = null)
+    {
+        var button = new Button
+        {
+            Style = (Style)FindResource("AppMenuItemButton"),
+            Content = label,
+            Foreground = foreground ?? BrushFor("InkBrush"),
+            MinWidth = 184,
+            HorizontalContentAlignment = HorizontalAlignment.Left
+        };
+        button.Click += (_, _) =>
+        {
+            popup.IsOpen = false;
+            action();
+        };
+        return button;
+    }
+
+    private void CopyImageName(string path)
+    {
+        try
+        {
+            Clipboard.SetText(Path.GetFileName(path));
+            ShowRuntimeToast("Имя файла скопировано");
+        }
+        catch (Exception exception) when (exception is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
+        {
+            AppLog.Write("Не удалось скопировать имя файла образа.", exception);
+            ShowRuntimeToast("Не удалось скопировать имя файла");
+        }
+    }
+
+    private void CopyImage(string path) => CopyResourceFile(path, "образ");
+
+    private void CopySound(string path) => CopyResourceFile(path, "звук");
+
+    private void CopyResourceFile(string path, string resourceLabel)
+    {
+        try
+        {
+            var directory = Path.GetDirectoryName(path)!;
+            var destination = FreeFilePath(directory, SafeFileName(path));
+            File.Copy(path, destination);
+            BuildObjectDetail();
+            ShowRuntimeToast($"{char.ToUpperInvariant(resourceLabel[0]) + resourceLabel[1..]} скопирован");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            AppLog.Write($"Не удалось скопировать {resourceLabel}.", exception);
+            ShowRuntimeToast($"Не удалось скопировать {resourceLabel}");
+        }
+    }
+
+    private void RenameImage(string path)
+    {
+        if (activeProject is null || detailScene is null || detailItem is null)
+        {
+            return;
+        }
+
+        var extension = Path.GetExtension(path);
+        ShowSpriteNameDialog("Переименовать образ", $"Формат {extension} сохранится.", "Переименовать", name =>
+        {
+            var currentName = Path.GetFileNameWithoutExtension(path);
+            if (string.Equals(currentName, name, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            var destination = Path.Combine(Path.GetDirectoryName(path)!, name + extension);
+            if (File.Exists(destination))
+            {
+                ShowRuntimeToast("Образ с таким именем уже существует");
+                return;
+            }
+
+            try
+            {
+                File.Move(path, destination);
+                BuildObjectDetail();
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                AppLog.Write("Не удалось переименовать образ.", exception);
+                ShowRuntimeToast("Не удалось переименовать образ");
+            }
+        }, Path.GetFileNameWithoutExtension(path));
+    }
+
+    private void DeleteImage(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            AppLog.Write("Не удалось удалить образ.", exception);
+            ShowRuntimeToast("Не удалось удалить образ");
+        }
+        BuildObjectDetail();
     }
 
     private void BuildSoundsPage(StackPanel content)
@@ -1169,8 +1410,7 @@ public partial class MainWindow
         var playButton = new Button
         {
             Style = (Style)FindResource("ToolButton"),
-            Content = "▶",
-            FontSize = 15,
+            Content = CreateSheetIcon("play", 16),
             Padding = new Thickness(10, 4, 10, 4),
             ToolTip = "Слушать",
             Margin = new Thickness(0, 0, 10, 0)
@@ -1179,32 +1419,16 @@ public partial class MainWindow
         AutomationProperties.SetName(playButton, $"Слушать {Path.GetFileName(path)}");
         DockPanel.SetDock(playButton, Dock.Left);
         layout.Children.Add(playButton);
-        var deleteButton = new Button
+        var actionsButton = new Button
         {
             Style = (Style)FindResource("ToolButton"),
-            Content = "×",
-            FontSize = 15,
-            Padding = new Thickness(10, 4, 10, 4),
-            ToolTip = "Удалить звук"
+            Content = CreateSheetIcon("dots", 16),
+            Padding = new Thickness(8, 4, 8, 4),
+            ToolTip = "Действия со звуком"
         };
-        deleteButton.Click += (_, _) =>
-        {
-            if (string.Equals(soundPreviewPath, path, StringComparison.OrdinalIgnoreCase))
-            {
-                StopSoundPreview();
-            }
-            try
-            {
-                File.Delete(path);
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-            {
-                AppLog.Write("Не удалось удалить звук.", exception);
-            }
-            BuildObjectDetail();
-        };
-        DockPanel.SetDock(deleteButton, Dock.Right);
-        layout.Children.Add(deleteButton);
+        AutomationProperties.SetName(actionsButton, $"Действия со звуком {Path.GetFileName(path)}");
+        DockPanel.SetDock(actionsButton, Dock.Right);
+        layout.Children.Add(actionsButton);
         var info = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         info.Cursor = Cursors.Hand;
         info.ToolTip = "Дважды щёлкни по имени, чтобы скопировать имя файла";
@@ -1216,16 +1440,7 @@ public partial class MainWindow
             }
 
             e.Handled = true;
-            try
-            {
-                Clipboard.SetText(Path.GetFileName(path));
-                ShowRuntimeToast("Имя файла скопировано");
-            }
-            catch (Exception exception) when (exception is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
-            {
-                AppLog.Write("Не удалось скопировать имя звукового файла.", exception);
-                ShowRuntimeToast("Не удалось скопировать имя файла");
-            }
+            CopySoundName(path);
         };
         info.Children.Add(new TextBlock
         {
@@ -1243,14 +1458,122 @@ public partial class MainWindow
         info.Children.Add(meta);
         layout.Children.Add(info);
         row.Child = layout;
+        var actionsPopup = new Popup
+        {
+            Placement = PlacementMode.Custom,
+            PlacementTarget = actionsButton,
+            AllowsTransparency = true,
+            StaysOpen = false,
+            PopupAnimation = PopupAnimation.None
+        };
+        var popupMotion = new TranslateTransform();
+        var popupCard = new Border
+        {
+            Width = 198,
+            Padding = new Thickness(6),
+            Background = BrushFor("PanelBrush"),
+            BorderBrush = BrushFor("HairlineBrush"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(10),
+            Opacity = 0,
+            RenderTransform = popupMotion
+        };
+        popupCard.Effect = new System.Windows.Media.Effects.DropShadowEffect
+        {
+            BlurRadius = 18,
+            ShadowDepth = 4,
+            Opacity = 0.2
+        };
+        var popupItems = new StackPanel();
+        popupItems.Children.Add(CreateImageActionItem("Скопировать звук", actionsPopup, () => CopySound(path)));
+        popupItems.Children.Add(CreateImageActionItem("Скопировать имя", actionsPopup, () => CopySoundName(path)));
+        popupItems.Children.Add(new Border
+        {
+            Height = 1,
+            Background = BrushFor("HairlineSoftBrush"),
+            Margin = new Thickness(6, 4, 6, 4)
+        });
+        popupItems.Children.Add(CreateImageActionItem("Удалить", actionsPopup, () => DeleteSound(path), BrushFor("ErrorBrush")));
+        popupCard.Child = popupItems;
+        actionsPopup.Child = popupCard;
+
+        var opensAbove = false;
+        actionsPopup.CustomPopupPlacementCallback = (popupSize, targetSize, _) =>
+        {
+            var origin = actionsButton.PointToScreen(new Point(0, 0));
+            var transform = PresentationSource.FromVisual(actionsButton)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+            var originX = origin.X / transform.M11;
+            var originY = origin.Y / transform.M22;
+            var workArea = SystemParameters.WorkArea;
+            var roomBelow = workArea.Bottom - originY - targetSize.Height;
+            var roomAbove = originY - workArea.Top;
+            opensAbove = roomBelow < popupSize.Height && roomAbove > roomBelow;
+            var x = Math.Clamp(targetSize.Width - popupSize.Width,
+                workArea.Left - originX,
+                workArea.Right - originX - popupSize.Width);
+            var y = opensAbove ? -popupSize.Height : targetSize.Height;
+            return [new CustomPopupPlacement(new Point(x, y), PopupPrimaryAxis.None)];
+        };
+        actionsPopup.Opened += (_, _) =>
+        {
+            popupCard.BeginAnimation(UIElement.OpacityProperty, null);
+            popupMotion.BeginAnimation(TranslateTransform.YProperty, null);
+            popupCard.Opacity = 0;
+            var initialOffset = opensAbove ? 8 : -8;
+            popupMotion.Y = initialOffset;
+            var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
+            popupCard.BeginAnimation(UIElement.OpacityProperty,
+                new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(170)) { EasingFunction = easing });
+            popupMotion.BeginAnimation(TranslateTransform.YProperty,
+                new DoubleAnimation(initialOffset, 0, TimeSpan.FromMilliseconds(170)) { EasingFunction = easing });
+        };
+        actionsButton.Click += (_, _) =>
+        {
+            if (!actionsPopup.IsOpen)
+            {
+                actionsPopup.IsOpen = true;
+            }
+        };
         ProbeSoundLength(path, meta);
 
         if (string.Equals(soundPreviewPath, path, StringComparison.OrdinalIgnoreCase))
         {
             soundPreviewButton = playButton;
-            playButton.Content = "⏹";
+            playButton.Content = CreateSheetIcon("stop", 14);
         }
         return row;
+    }
+
+    private void CopySoundName(string path)
+    {
+        try
+        {
+            Clipboard.SetText(Path.GetFileName(path));
+            ShowRuntimeToast("Имя файла скопировано");
+        }
+        catch (Exception exception) when (exception is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
+        {
+            AppLog.Write("Не удалось скопировать имя звукового файла.", exception);
+            ShowRuntimeToast("Не удалось скопировать имя файла");
+        }
+    }
+
+    private void DeleteSound(string path)
+    {
+        if (string.Equals(soundPreviewPath, path, StringComparison.OrdinalIgnoreCase))
+        {
+            StopSoundPreview();
+        }
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            AppLog.Write("Не удалось удалить звук.", exception);
+            ShowRuntimeToast("Не удалось удалить звук");
+        }
+        BuildObjectDetail();
     }
 
     private void ProbeSoundLength(string path, TextBlock meta)
@@ -1294,7 +1617,7 @@ public partial class MainWindow
         if (string.Equals(soundPreviewPath, path, StringComparison.OrdinalIgnoreCase))
         {
             StopSoundPreview();
-            button.Content = "▶";
+            button.Content = CreateSheetIcon("play", 16);
             return;
         }
 
@@ -1303,11 +1626,13 @@ public partial class MainWindow
         {
             soundPreviewPlayer.MediaEnded -= OnSoundPreviewEnded;
             soundPreviewPlayer.MediaEnded += OnSoundPreviewEnded;
+            soundPreviewPlayer.MediaFailed -= OnSoundPreviewFailed;
+            soundPreviewPlayer.MediaFailed += OnSoundPreviewFailed;
             soundPreviewPlayer.Open(new Uri(path, UriKind.Absolute));
             soundPreviewPlayer.Play();
             soundPreviewPath = path;
             soundPreviewButton = button;
-            button.Content = "⏹";
+            button.Content = CreateSheetIcon("stop", 14);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
         {
@@ -1319,6 +1644,15 @@ public partial class MainWindow
     private void OnSoundPreviewEnded(object? sender, EventArgs e)
     {
         Dispatcher.BeginInvoke(StopSoundPreview);
+    }
+
+    private void OnSoundPreviewFailed(object? sender, ExceptionEventArgs e)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            StopSoundPreview();
+            ShowRuntimeToast("Не удалось проиграть файл");
+        });
     }
 
     private void StopSoundPreview()
@@ -1333,7 +1667,7 @@ public partial class MainWindow
         }
         if (soundPreviewButton is not null)
         {
-            soundPreviewButton.Content = "▶";
+            soundPreviewButton.Content = CreateSheetIcon("play", 16);
             soundPreviewButton = null;
         }
         soundPreviewPath = null;
@@ -1381,7 +1715,10 @@ public partial class MainWindow
                 {
                     isRecording = false;
                     recordingTimer?.Stop();
-                    BuildObjectDetail();
+                    if (showingDetail)
+                    {
+                        BuildObjectDetail();
+                    }
                 });
             };
             recordingStarted = DateTime.UtcNow;
@@ -1398,7 +1735,7 @@ public partial class MainWindow
             recordingTimer.Start();
             BuildObjectDetail();
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or NAudio.MmException)
         {
             AppLog.Write("Не удалось начать запись с микрофона.", exception);
             lock (recorderLock)
@@ -1493,45 +1830,24 @@ public partial class MainWindow
 
     private Grid? detailSheetOverlay;
 
-    private FrameworkElement CreateSheetIcon(string kind, double size = 34, Brush? stroke = null)
+    private FrameworkElement CreateSheetIcon(string kind, double size = 34)
     {
-        var data = kind switch
+        var key = "Icon." + char.ToUpperInvariant(kind[0]) + kind[1..];
+        return new Image
         {
-            "pencil" => "M4.5,19.5 L6.2,13.8 L15.2,4.8 L19.2,8.8 L10.2,17.8 Z M13.8,6.2 L17.8,10.2",
-            "import" => "M9,2.5 H15 L21,8.5 V21.5 H9 Z M15,2.5 V8.5 H21 M2,12 H10 M7.5,9.5 L10,12 L7.5,14.5",
-            "file" => "M8,2.5 H15 L21,8.5 V21.5 H8 Z M15,2.5 V8.5 H21 M11,13 H18 M11,16 H18 M11,19 H16",
-            "eye" => "M2,12 C2,12 6,5.5 12,5.5 C18,5.5 22,12 22,12 C22,12 18,18.5 12,18.5 C6,18.5 2,12 2,12 Z M12,9.5 a2.5,2.5 0 1 0 0.01,0 Z",
-            "sound" => "M4,9.5 H8 L13.5,5 V19 L8,14.5 H4 Z M16,9 a4.5,4.5 0 0 1 0,6 M18.5,6.5 a8,8 0 0 1 0,11",
-            "code" => "M8.5,7.5 L4,12 L8.5,16.5 M15.5,7.5 L20,12 L15.5,16.5 M13.2,6.5 L10.8,17.5",
-            "brush" => "M4.5,19.5 L14,10 M14,10 L19.5,4.5",
-            "eraser" => "M7,14 L12,9 L19,16 L14,21 Z M3,21 H10",
-            "fillbucket" => "M7,11 H13 L14.5,20 H8.5 Z M13,11 L17,5 M17,5 c1,1.5 1.5,2.5 1.5,3.5 a1.5,1.5 0 1 1 -3,0 C15.5,7.5 16,6.5 17,5 Z",
-            "pipette" => "M16,4.5 a3,3 0 1 0 0.01,0 M13.8,6.8 L6,14.6 L4,20 L9.4,18 L17.2,10.2",
-            "shape" => "M5,7 H19 V17 H5 Z",
-            "ellipse" => "M12,5 C16.5,5 20,8 20,12 C20,16 16.5,19 12,19 C7.5,19 4,16 4,12 C4,8 7.5,5 12,5 Z",
-            "line" => "M5,19 L19,5",
-            "handmove" => "M12,3 V21 M3,12 H21 M12,3 L9.5,5.5 M12,3 L14.5,5.5 M12,21 L9.5,18.5 M12,21 L14.5,18.5 M3,12 L5.5,9.5 M3,12 L5.5,14.5 M21,12 L18.5,9.5 M21,12 L18.5,14.5",
-            "undo" => "M9,5 H4 V10 M4,5 C4,12 8.5,17.5 15,17.5",
-            "redo" => "M15,5 H20 V10 M20,5 C20,12 15.5,17.5 9,17.5",
-            "spray" => "M10,14 H14 V21 H10 Z M11,14 L9,5 M13,14 L15,5 M12,14 L12,4",
-            "text" => "M5,20 L12,4 L19,20 M8,15 H16",
-            _ => "M10,12 V6 a4,4 0 0 1 8,0 V12 a4,4 0 0 1 -8,0 Z M6,12 a8,8 0 0 0 16,0 M14,20 V23 M10,23 H18"
-        };
-        return new Viewbox
-        {
+            Source = TryFindResource(key) as System.Windows.Media.ImageSource,
             Width = size,
             Height = size,
-            Child = new System.Windows.Shapes.Path
-            {
-                Data = Geometry.Parse(data),
-                Stroke = stroke ?? BrushFor("InkBrush"),
-                StrokeThickness = 1.8,
-                StrokeLineJoin = PenLineJoin.Round,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Fill = Brushes.Transparent
-            }
+            Stretch = Stretch.Uniform
         };
+    }
+
+    private StackPanel CreateIconContent(string kind, string text, double size = 14)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        row.Children.Add(CreateSheetIcon(kind, size));
+        row.Children.Add(new TextBlock { Text = text, Margin = new Thickness(6, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
+        return row;
     }
 
     private void ShowDetailSheet(params (string Label, string Icon, Action Run)[] options)
