@@ -639,7 +639,7 @@ public sealed class ScriptCompileIntegrationTests
     private static Compiled Compile(string source)
     {
         var store = new ProjectStore();
-        var runtime = new ProjectRuntime(store, new ProjectContentStore(store));
+        var compiler = new ScriptCompiler(store, new ProjectContentStore(store));
 
         var scene = new IskraScene { Name = "Главная" };
         var item = new IskraObject { Name = "Фон" };
@@ -654,10 +654,10 @@ public sealed class ScriptCompileIntegrationTests
         project.Scenes.Add(new IskraScene { Name = "Вторая" });
         project.Scenes.Add(new IskraScene { Name = "Планета.Марс" });
 
-        var method = typeof(ProjectRuntime).GetMethod("CompileScript", BindingFlags.Instance | BindingFlags.NonPublic)
+        var method = typeof(ScriptCompiler).GetMethod("CompileScript", BindingFlags.Instance | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Метод CompileScript не найден.");
         var diagnostics = new List<RuntimeDiagnostic>();
-        var commands = (List<RuntimeCommand>)method.Invoke(runtime,
+        var commands = (List<RuntimeCommand>)method.Invoke(compiler,
             [project, scene, item, source, scene.Objects.ToList(), diagnostics])!;
         return new Compiled(commands, diagnostics, item, target, third);
     }

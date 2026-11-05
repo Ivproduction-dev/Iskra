@@ -6,6 +6,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Icons.xaml" />
+                <ResourceDictionary Source="PaintToolIcons.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <SolidColorBrush x:Key="CanvasBrush" Color="#FAF9F5" />
         <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF" />

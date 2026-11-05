@@ -13,4 +13,8 @@
     <PackageReference Include="NAudio" Version="2.2.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Iskra.Core\Iskra.Core.csproj" />
+  </ItemGroup>
+
 </Project>

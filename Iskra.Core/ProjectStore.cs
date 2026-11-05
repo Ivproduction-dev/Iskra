@@ -1,44 +1,8 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.VisualBasic.FileIO;
 
 namespace IskraStudio;
-
-public enum ProjectOrientation
-{
-    Horizontal,
-    Vertical
-}
-
-public sealed class IskraProject
-{
-    public string Name { get; set; } = string.Empty;
-    public ProjectOrientation Orientation { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset? LastOpenedAt { get; set; }
-    public List<IskraScene> Scenes { get; set; } = [];
-
-    [JsonIgnore]
-    public string OrientationLabel => Orientation == ProjectOrientation.Horizontal
-        ? "Горизонтальная сцена"
-        : "Вертикальная сцена";
-}
-
-public sealed class IskraScene
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Name { get; set; } = string.Empty;
-    public List<IskraObject> Objects { get; set; } = [];
-}
-
-public sealed class IskraObject
-{
-    public static readonly Guid BackgroundId = new("A7B3C9D1-E5F2-4A8B-9C0D-1234567890AB");
-
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Name { get; set; } = string.Empty;
-}
 
 public sealed class ProjectStore
 {
@@ -56,7 +20,27 @@ public sealed class ProjectStore
         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
     };
 
-    private readonly string projectsDirectory = Path.Combine(AppPaths.DataDirectory, "Projects");
+    private static readonly char[] InvalidNameChars = Path.GetInvalidFileNameChars()
+        .Concat(new[] { '<', '>', ':', '"', '/', '\\', '|', '?', '*' })
+        .Distinct()
+        .ToArray();
+
+    private readonly string projectsDirectory;
+    private readonly Action<string> deleteProjectDirectory;
+
+    public ProjectStore(string? dataDirectory = null, Action<string>? deleteProjectDirectory = null)
+    {
+        var resolvedDataDirectory = dataDirectory ?? Environment.GetEnvironmentVariable("ISKRA_DATA_DIR");
+        if (string.IsNullOrWhiteSpace(resolvedDataDirectory))
+        {
+            resolvedDataDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "IskraStudio");
+        }
+
+        projectsDirectory = Path.Combine(Path.GetFullPath(resolvedDataDirectory), "Projects");
+        this.deleteProjectDirectory = deleteProjectDirectory ?? (directory => Directory.Delete(directory, recursive: true));
+    }
 
     public IReadOnlyList<IskraProject> LoadAll(out IReadOnlyList<string> skippedProjects)
     {
@@ -96,9 +80,9 @@ public sealed class ProjectStore
 
                 projects.Add(project);
             }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidDataException)
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidDataException or ArgumentException)
             {
-                AppLog.Write($"Не удалось прочитать проект «{Path.GetFileName(projectDirectory)}».", exception);
+                CoreLog.Write($"Не удалось прочитать проект «{Path.GetFileName(projectDirectory)}».", exception);
                 skipped.Add(Path.GetFileName(projectDirectory));
             }
         }
@@ -118,22 +102,8 @@ public sealed class ProjectStore
         error = null;
         var name = inputName.Trim();
 
-        if (name.Length == 0)
+        if (!IsValidProjectName(name, out error))
         {
-            error = "Введите имя проекта.";
-            return false;
-        }
-
-        if (name.Length > 50 || name is "." or ".." || name.EndsWith('.') || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-        {
-            error = "Имя слишком длинное или содержит недопустимые символы.";
-            return false;
-        }
-
-        var baseName = Path.GetFileNameWithoutExtension(name);
-        if (ReservedNames.Contains(baseName))
-        {
-            error = "Это имя зарезервировано Windows. Выберите другое.";
             return false;
         }
 
@@ -295,12 +265,12 @@ public sealed class ProjectStore
 
         try
         {
-            FileSystem.DeleteDirectory(directory, UIOption.OnlyErrorDialogs, RecycleOption.SendToRecycleBin);
+            deleteProjectDirectory(directory);
             return true;
         }
         catch (IOException)
         {
-            error = "Не удалось переместить проект в корзину.";
+            error = "Не удалось удалить папку проекта.";
             return false;
         }
         catch (UnauthorizedAccessException)
@@ -310,7 +280,7 @@ public sealed class ProjectStore
         }
     }
 
-    internal static bool IsValidProjectName(string name, out string? error)
+    public static bool IsValidProjectName(string name, out string? error)
     {
         error = null;
         if (name.Length == 0)
@@ -319,7 +289,8 @@ public sealed class ProjectStore
             return false;
         }
 
-        if (name.Length > 50 || name is "." or ".." || name.EndsWith('.') || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        if (name.Length > 50 || name is "." or ".." || name.EndsWith('.') ||
+            name.IndexOfAny(InvalidNameChars) >= 0 || name.Any(char.IsControl))
         {
             error = "Имя слишком длинное или содержит недопустимые символы.";
             return false;
@@ -339,7 +310,7 @@ public sealed class ProjectStore
     {
         if (string.IsNullOrWhiteSpace(name) || name is "." or ".." ||
             !string.Equals(Path.GetFileName(name), name, StringComparison.Ordinal) ||
-            name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            name.IndexOfAny(InvalidNameChars) >= 0 || name.Any(char.IsControl))
         {
             throw new ArgumentException("Недопустимое имя папки проекта.", nameof(name));
         }
@@ -354,7 +325,7 @@ public sealed class ProjectStore
         return directory;
     }
 
-    internal void SweepLeftoverOperations()
+    public void SweepLeftoverOperations()
     {
         try
         {
@@ -362,7 +333,7 @@ public sealed class ProjectStore
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            AppLog.Write("Не удалось открыть папку проектов при зачистке.", exception);
+            CoreLog.Write("Не удалось открыть папку проектов при зачистке.", exception);
             return;
         }
 
@@ -393,23 +364,23 @@ public sealed class ProjectStore
                         }
                         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
                         {
-                            AppLog.Write($"Не удалось удалить временный файл «{Path.GetFileName(temporary)}».", exception);
+                            CoreLog.Write($"Не удалось удалить временный файл «{Path.GetFileName(temporary)}».", exception);
                         }
                     }
                 }
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                AppLog.Write($"Не удалось зачистить «{name}».", exception);
+                CoreLog.Write($"Не удалось зачистить «{name}».", exception);
             }
         }
     }
 
-    internal string GetProjectDirectoryFor(IskraProject project) => GetProjectDirectory(project.Name);
+    public string GetProjectDirectoryFor(IskraProject project) => GetProjectDirectory(project.Name);
 
-    internal void SaveProject(IskraProject project) => Save(project);
+    public void SaveProject(IskraProject project) => Save(project);
 
-    internal string ProjectsRoot => projectsDirectory;
+    public string ProjectsRoot => projectsDirectory;
 
     internal static void SaveProjectToDirectory(IskraProject project, string directory)
     {
@@ -427,11 +398,6 @@ public sealed class ProjectStore
         Directory.CreateDirectory(Path.Combine(directory, "sounds"));
         Directory.CreateDirectory(Path.Combine(directory, "sprites"));
         Directory.CreateDirectory(Path.Combine(directory, "scripts"));
-        var codePath = Path.Combine(directory, "code.txt");
-        if (!File.Exists(codePath))
-        {
-            File.WriteAllText(codePath, string.Empty);
-        }
 
         foreach (var scene in project.Scenes)
         {

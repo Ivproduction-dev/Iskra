@@ -186,7 +186,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Chrome" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -368,9 +368,9 @@
                                     <Border Width="46" Height="46" CornerRadius="12" Background="{DynamicResource AccentBrush}" VerticalAlignment="Center">
                                         <Image Source="{StaticResource Icon.Spark}" Width="30" Height="30" />
                                     </Border>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
-                                        <TextBlock x:Name="RecentProjectName" FontSize="15" FontWeight="SemiBold" Foreground="{DynamicResource InkBrush}" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="Открыть проект" Margin="0,4,0,0" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="14,0,0,0">
+                                        <TextBlock x:Name="RecentProjectName" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource InkBrush}" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock x:Name="RecentProjectMeta" Text="Открыть проект" Margin="0,3,0,0" FontSize="12" Foreground="{DynamicResource MutedBrush}" />
                                     </StackPanel>
                                     <Image Grid.Column="2" Source="{StaticResource Icon.Arrowright}" Width="18" Height="18" VerticalAlignment="Center" />
                                 </Grid>
@@ -437,10 +437,18 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="56" />
                                                 </Grid.ColumnDefinitions>
-                                                <Border Width="96" Height="96" CornerRadius="10" Background="{DynamicResource AccentBrush}" VerticalAlignment="Center">
-                                                    <Image Source="{StaticResource Icon.Spark}" Width="64" Height="64" />
+                                                <Border Width="92" Height="92" CornerRadius="12" Background="{DynamicResource AccentBrush}" VerticalAlignment="Center">
+                                                    <Image Source="{StaticResource Icon.Spark}" Width="60" Height="60" />
                                                 </Border>
-                                                <TextBlock Grid.Column="1" Text="{Binding Name}" Margin="12,0,0,0" FontSize="19" FontWeight="SemiBold" Foreground="{DynamicResource InkBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                                                    <TextBlock Text="{Binding Name}" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource InkBrush}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                                                    <StackPanel Orientation="Horizontal" Margin="0,7,0,0" VerticalAlignment="Center">
+                                                        <Border Background="{DynamicResource SoftBrush}" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1" CornerRadius="6" Padding="7,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="{Binding OrientationLabel}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource BodyBrush}" />
+                                                        </Border>
+                                                        <TextBlock Text="{Binding ScenesCountLabel}" FontSize="12" Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </StackPanel>
                                             </Grid>
                                         </Button>
                                         <Button Style="{StaticResource ToolButton}" Width="44" Height="52" Padding="0" ToolTip="Действия с проектом" AutomationProperties.Name="Действия с проектом" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0" Tag="{Binding}" Click="ProjectActions_Click">
@@ -588,7 +596,9 @@
                         </Border>
                         <TextBlock Text="Искра Студио" Margin="8,0,0,0" FontWeight="SemiBold" Foreground="{DynamicResource InkBrush}" VerticalAlignment="Center" />
                         <Border Width="1" Height="22" Background="{DynamicResource HairlineBrush}" Margin="14,0" />
-                        <TextBlock x:Name="WorkspaceTitle" Text="Список сцен" FontWeight="SemiBold" Foreground="{DynamicResource InkBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        <StackPanel x:Name="WorkspaceBreadcrumbsHost" Orientation="Horizontal" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                            <TextBlock x:Name="WorkspaceTitle" Text="Список сцен" FontWeight="SemiBold" Foreground="{DynamicResource InkBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
+                        </StackPanel>
                     </StackPanel>
                     <Button x:Name="WorkspaceCancelSelectionButton" Style="{StaticResource ToolButton}" ToolTip="Отменить выбор" Visibility="Collapsed" Click="CancelSceneSelection_Click" DockPanel.Dock="Right" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                         <Image Source="{StaticResource Icon.Close}" Width="15" Height="15" />

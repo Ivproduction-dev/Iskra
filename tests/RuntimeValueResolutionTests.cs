@@ -18,7 +18,7 @@ public sealed class RuntimeValueResolutionTests
             [propertyKey] = expected
         };
 
-        Assert.Equal(expected, ProjectRuntime.ResolveValue(expression, properties));
+        Assert.Equal(expected, RuntimeValueResolver.ResolveValue(expression, properties));
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public sealed class RuntimeValueResolutionTests
             ["Свойство.х"] = "240"
         };
 
-        Assert.Equal("свойство.х", ProjectRuntime.ResolveValue("\"свойство.х\"", properties));
+        Assert.Equal("свойство.х", RuntimeValueResolver.ResolveValue("\"свойство.х\"", properties));
     }
 
     [Fact]
@@ -37,13 +37,13 @@ public sealed class RuntimeValueResolutionTests
     {
         var properties = new RuntimeObjectProperties();
 
-        Assert.Equal("0", ProjectRuntime.ResolveValue("свойство.х", properties.Values));
-        Assert.Equal("0", ProjectRuntime.ResolveValue("свойство.у", properties.Values));
+        Assert.Equal("0", RuntimeValueResolver.ResolveValue("свойство.х", properties.Values));
+        Assert.Equal("0", RuntimeValueResolver.ResolveValue("свойство.у", properties.Values));
 
         properties.SetPosition(200, -160);
 
-        Assert.Equal("200", ProjectRuntime.ResolveValue("свойство.х", properties.Values));
-        Assert.Equal("-160", ProjectRuntime.ResolveValue("свойство.у", properties.Values));
+        Assert.Equal("200", RuntimeValueResolver.ResolveValue("свойство.х", properties.Values));
+        Assert.Equal("-160", RuntimeValueResolver.ResolveValue("свойство.у", properties.Values));
     }
 
     [Fact]
@@ -51,14 +51,14 @@ public sealed class RuntimeValueResolutionTests
     {
         var properties = new RuntimeObjectProperties();
 
-        Assert.Equal("100", ProjectRuntime.ResolveValue("Свойство.размер", properties.Values));
-        Assert.Equal("0", ProjectRuntime.ResolveValue("свойство.прозрачность", properties.Values));
+        Assert.Equal("100", RuntimeValueResolver.ResolveValue("Свойство.размер", properties.Values));
+        Assert.Equal("0", RuntimeValueResolver.ResolveValue("свойство.прозрачность", properties.Values));
 
         properties.SetSize(500);
         properties.SetTransparency(12.5);
 
-        Assert.Equal("500", ProjectRuntime.ResolveValue("свойство.РАЗМЕР", properties.Values));
-        Assert.Equal("12.5", ProjectRuntime.ResolveValue("Свойство.ПРОЗРАЧНОСТЬ", properties.Values));
+        Assert.Equal("500", RuntimeValueResolver.ResolveValue("свойство.РАЗМЕР", properties.Values));
+        Assert.Equal("12.5", RuntimeValueResolver.ResolveValue("Свойство.ПРОЗРАЧНОСТЬ", properties.Values));
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class RuntimeValueResolutionTests
     {
         for (var attempt = 0; attempt < 100; attempt++)
         {
-            var value = ProjectRuntime.ResolveValue(
+            var value = RuntimeValueResolver.ResolveValue(
                 "Случайное.значение.от.5.до.10",
                 new Dictionary<string, string>());
 
@@ -80,7 +80,7 @@ public sealed class RuntimeValueResolutionTests
     {
         const string fixedValue = "Случайное.значение.от.1.5.до.1.5";
 
-        Assert.Equal("Значение:1.5", ProjectRuntime.ResolveValue($"Значение:..{fixedValue}", new Dictionary<string, string>()));
+        Assert.Equal("Значение:1.5", RuntimeValueResolver.ResolveValue($"Значение:..{fixedValue}", new Dictionary<string, string>()));
         Assert.True(ConditionalDirectiveParser.Evaluate($"{fixedValue} = 1.5", new Dictionary<string, string>()));
     }
 }

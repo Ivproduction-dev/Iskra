@@ -40,7 +40,11 @@ public partial class MainWindow
 
     private readonly MediaPlayer soundPreviewPlayer = new();
     private string? soundPreviewPath;
+    private Border? soundPreviewRow;
     private Button? soundPreviewButton;
+    private TextBlock? soundPreviewTitle;
+    private TextBlock? soundPreviewMeta;
+    private Border? soundPreviewBadge;
 
     private WaveInEvent? recorder;
     private WaveFileWriter? recorderWriter;
@@ -64,6 +68,7 @@ public partial class MainWindow
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = item.Name;
+        UpdateBreadcrumbs();
         WorkspaceBackButton.Content = CreateIconContent("arrowleft", scene.Name);
         WorkspaceMenuButton.Visibility = Visibility.Collapsed;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
@@ -141,9 +146,31 @@ public partial class MainWindow
         tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         tabGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        AddDetailTab(tabGrid, "Скрипты", "code", ObjectDetailTab.Scripts, 0);
-        AddDetailTab(tabGrid, "Образы", "eye", ObjectDetailTab.Images, 1);
-        AddDetailTab(tabGrid, "Звуки", "sound", ObjectDetailTab.Sounds, 2);
+
+        var scriptCount = 0;
+        var imageCount = 0;
+        var soundCount = 0;
+        try
+        {
+            var script = projectContentStore.ReadObjectScript(activeProject, detailScene, detailItem.Id);
+            if (!string.IsNullOrWhiteSpace(script))
+            {
+                scriptCount = 1;
+            }
+            var imageDir = projectContentStore.GetObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sprites");
+            imageCount = ProjectContentStore.ListResourceFiles(imageDir, ProjectContentStore.ImageExtensions).Count;
+
+            var soundDir = projectContentStore.GetObjectResourceDirectory(activeProject, detailScene, detailItem.Id, "sounds");
+            soundCount = ProjectContentStore.ListResourceFiles(soundDir, ProjectContentStore.AudioExtensions).Count;
+        }
+        catch (Exception ex)
+        {
+            AppLog.Write("Ошибка подсчёта ресурсов объекта", ex);
+        }
+
+        AddDetailTab(tabGrid, "Скрипты", "code", ObjectDetailTab.Scripts, 0, scriptCount);
+        AddDetailTab(tabGrid, "Образы", "eye", ObjectDetailTab.Images, 1, imageCount);
+        AddDetailTab(tabGrid, "Звуки", "sound", ObjectDetailTab.Sounds, 2, soundCount);
         var dots = new StackPanel
         {
             Orientation = Orientation.Horizontal,
@@ -372,7 +399,7 @@ public partial class MainWindow
         SwitchDetailTab(DetailTabOrder[index], direction);
     }
 
-    private void AddDetailTab(Grid grid, string label, string icon, ObjectDetailTab tab, int column)
+    private void AddDetailTab(Grid grid, string label, string icon, ObjectDetailTab tab, int column, int badgeCount = 0)
     {
         var selected = detailTab == tab;
         var cell = new Grid();
@@ -388,15 +415,41 @@ public partial class MainWindow
         };
         var cellContent = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
         cellContent.Children.Add(CreateSheetIcon(icon, 26));
-        cellContent.Children.Add(new TextBlock
+
+        var headerRow = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 3, 0, 0)
+        };
+        headerRow.Children.Add(new TextBlock
         {
             Text = label,
             FontSize = 11,
             FontWeight = selected ? FontWeights.SemiBold : FontWeights.Regular,
             Foreground = BrushFor(selected ? "AccentBrush" : "BodyBrush"),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Margin = new Thickness(0, 3, 0, 0)
+            VerticalAlignment = VerticalAlignment.Center
         });
+        if (badgeCount > 0)
+        {
+            var badge = new Border
+            {
+                Margin = new Thickness(5, 0, 0, 0),
+                Padding = new Thickness(5, 1, 5, 1),
+                CornerRadius = new CornerRadius(6),
+                Background = BrushFor(selected ? "AccentSoftBrush" : "SoftBrush"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = badgeCount.ToString(),
+                    FontSize = 10,
+                    FontWeight = FontWeights.SemiBold,
+                    Foreground = BrushFor(selected ? "AccentBrush" : "MutedBrush")
+                }
+            };
+            headerRow.Children.Add(badge);
+        }
+        cellContent.Children.Add(headerRow);
         button.Content = cellContent;
         button.Click += (_, _) =>
         {
@@ -434,10 +487,10 @@ public partial class MainWindow
                 <Rule color="String">&quot;([^&quot;]|\\.)*&quot;</Rule>
                 <Rule color="Keyword">(?i)\bкак\.только\b</Rule>
                 <Rule color="Resource">[\p{L}_][\p{L}\p{N}_-]*(?:\.[\p{L}\p{N}_-]+)+</Rule>
-                <Rule color="Keyword">(?i)\b(при|запуске|нажатии|отпускании|наведении|задать|присвоить|изменить|печать|показать|спрятать|скрыть|поместить|подвинуть|воспроизвести|зациклить|остановить|звук|громкость|ждать|проиграть|спросить|каждые|каждый|кадр|клавиша|клавиши|право|лево|верх|вниз|пробел|ввод|отмена|забой|запустить|сцену|продолжить|сменить|ориентацию|горизонтальная|вертикальная|иначеесли|иначеесле|иначеэсли|если|есле|эсли|иначе|конец|то|и|или|не|нет|секунд\w*|минут\w*|час\w*|изображение|прозрачность|размер|яркость|когда|перед|назад|истина|ложь|true|false|свойство|коснулся)\b</Rule>
+                <Rule color="Keyword">(?i)\b(при|окончании|звука|запуске|нажатии|отпускании|наведении|задать|присвоить|изменить|печать|показать|спрятать|скрыть|поместить|подвинуть|двигать|до|за|движение|слой|видимость|переключить|отразить|по|гравитацию|сцены|тип|статичный|динамичный|без|повтор|повторить|приостановить|продолжить|воспроизвести|зациклить|остановить|звук|громкость|ждать|проиграть|спросить|каждые|каждый|кадр|клавиша|клавиши|право|лево|верх|вниз|пробел|ввод|отмена|забой|запустить|сцену|ориентацию|горизонтальная|вертикальная|иначеесли|иначеесле|иначеэсли|если|есле|эсли|иначе|конец|то|и|или|не|нет|секунд\w*|минут\w*|час\w*|изображение|прозрачность|размер|яркость|направление|когда|перед|назад|истина|ложь|true|false|свойство|коснулся)\b</Rule>
                 <Rule color="Keyword">(?i)\b(вечно|пока)\b</Rule>
                 <Rule color="Number">[+-]?(?:\d+(?:\.\d*)?|\.\d+)</Rule>
-                <Rule color="Operator">\.\.|=</Rule>
+                <Rule color="Operator">\.\.|[=+\-*/()]</Rule>
                 <Rule color="Keyword">(?i)\b(прервать)\b</Rule>
               </RuleSet>
             </SyntaxDefinition>
@@ -496,12 +549,47 @@ public partial class MainWindow
     private TextBlock? detailScriptStatus;
     private DispatcherTimer? detailSaveTimer;
     private bool detailScriptDirty;
+
+    private static (string Category, string ColorToken) GetSuggestionCategory(string label)
+    {
+        if (label.StartsWith("При.", StringComparison.OrdinalIgnoreCase) ||
+            label.StartsWith("Когда.", StringComparison.OrdinalIgnoreCase) ||
+            label.StartsWith("Как.Только", StringComparison.OrdinalIgnoreCase) ||
+            label.StartsWith("Кажд", StringComparison.OrdinalIgnoreCase))
+        {
+            return ("событие", "AccentBrush");
+        }
+        if (label.StartsWith("Свойство.", StringComparison.OrdinalIgnoreCase) ||
+            label.StartsWith("Случайное.значение.", StringComparison.OrdinalIgnoreCase))
+        {
+            return ("формула", "Operator");
+        }
+        if (label.Contains("Поместить") || label.Contains("Подвинуть"))
+        {
+            return ("движение", "SyntaxMintBrush");
+        }
+        if (label.Contains("звук"))
+        {
+            return ("звук", "Operator");
+        }
+        if (label.Contains("изображение") || label.Contains("прозрачность") || label.Contains("размер") || label.Contains("яркость") || label.Contains("направление") || label.Contains("Спрятать") || label.Contains("Показать") || label.Contains("Скрыть"))
+        {
+            return ("внешность", "SceneSunBrush");
+        }
+        if (label.Contains("Если") || label.Contains("Есле") || label.Contains("Эсли") || label.Contains("Пока") || label.Contains("Вечно") || label.Contains("Иначе") || label.Contains("Конец") || label.Contains("Прервать"))
+        {
+            return ("логика", "Operator");
+        }
+        return ("команда", "MutedBrush");
+    }
+
     private static readonly (string Label, string Command, string? Placeholder)[] ScriptCommandSuggestions =
     [
         ("При. запуске", "При. запуске", null),
         ("При. нажатии", "При. нажатии", null),
         ("При. отпускании", "При. отпускании", null),
         ("При. наведении", "При. наведении", null),
+        ("При. окончании. звука. файл.mp3", "При. окончании. звука. ", "файл.mp3"),
         ("При. нажатии клавиши.пробел", "При. нажатии клавиши.пробел", "пробел"),
         ("Каждые.2.секунды", "Каждые.2.секунды", "2"),
         ("Каждый кадр", "Каждый кадр", null),
@@ -517,10 +605,21 @@ public partial class MainWindow
         ("Изменить размер. 10", "Изменить размер. ", "10"),
         ("Задать яркость. 100", "Задать яркость. ", "100"),
         ("Изменить яркость. 10", "Изменить яркость. ", "10"),
+        ("Задать направление. 90", "Задать направление. ", "90"),
+        ("Изменить направление. 10", "Изменить направление. ", "10"),
         ("Изменить имя число", "Изменить имя ", "имя"),
         ("Задать Свойство.х = 0", "Задать Свойство.х = 0", "0"),
         ("Изменить Свойство.х 5", "Изменить Свойство.х 5", "5"),
         ("Подвинуть. 10 -5", "Подвинуть. 10 -5", "10 -5"),
+        ("Двигать.до. 200 160 за. 1 секунд", "Двигать.до. 200 160 за. ", "1 секунд"),
+        ("Остановить движение.", "Остановить движение.", null),
+        ("Задать слой. 3", "Задать слой. ", "3"),
+        ("Изменить слой. 1", "Изменить слой. ", "1"),
+        ("Задать видимость. ложь", "Задать видимость. ", "ложь"),
+        ("Переключить видимость.", "Переключить видимость.", null),
+        ("Отразить. по. х", "Отразить. по. х", null),
+        ("Задать гравитацию.сцены. 0 -10", "Задать гравитацию.сцены. ", "0 -10"),
+        ("Задать тип.движения. динамичный", "Задать тип.движения. ", "динамичный"),
         ("Изменить изображение. перед", "Изменить изображение. перед", null),
         ("Изменить изображение. назад", "Изменить изображение. назад", null),
         ("Изменить изображение. объект.перед", "Изменить изображение. объект.перед", null),
@@ -550,8 +649,12 @@ public partial class MainWindow
         ("Воспроизвести звук ждать.", "Воспроизвести звук ждать. ", null),
         ("Зациклить звук.файл.mp3", "Зациклить звук.файл.mp3", "файл.mp3"),
         ("Остановить звук.файл.mp3", "Остановить звук.файл.mp3", "файл.mp3"),
+        ("Приостановить звук. файл.mp3", "Приостановить звук. ", "файл.mp3"),
+        ("Продолжить звук. файл.mp3", "Продолжить звук. ", "файл.mp3"),
         ("Задать громкость. 50", "Задать громкость. 50", "50"),
         ("Задать громкость.файл.mp3 50", "Задать громкость.файл.mp3 50", "50"),
+        ("Изменить громкость. файл.mp3 -10", "Изменить громкость. ", "файл.mp3 -10"),
+        ("Задать повтор.звука. файл.mp3 истина", "Задать повтор.звука. ", "файл.mp3 истина"),
         ("Проиграть изображение. 8", "Проиграть изображение. 8", "8"),
         ("Проиграть изображение.объект 8", "Проиграть изображение.объект 8", "объект"),
         ("Остановить изображение.", "Остановить изображение.", null),
@@ -561,6 +664,20 @@ public partial class MainWindow
         ("Сменить.ориентацию.вертикальная", "Сменить.ориентацию.вертикальная", null),
         ("Сменить.ориентацию.горизонтальная", "Сменить.ориентацию.горизонтальная", null),
         ("Спросить. \"вопрос?\" имя", "Спросить. ", null)
+    ];
+
+    private static readonly (string Label, string Command, string? Placeholder)[] ScriptFormulaSuggestions =
+    [
+        ("Свойство.х", RuntimeObjectProperties.XProperty, null),
+        ("Свойство.у", RuntimeObjectProperties.YProperty, null),
+        ("Свойство.нажат", RuntimeObjectProperties.PressedProperty, null),
+        ("Свойство.наведен", RuntimeObjectProperties.HoveredProperty, null),
+        ("Свойство.размер", RuntimeObjectProperties.SizeProperty, null),
+        ("Свойство.прозрачность", RuntimeObjectProperties.TransparencyProperty, null),
+        ("Свойство.направление", RuntimeObjectProperties.DirectionProperty, null),
+        ("Свойство.коснулся.объект", $"{RuntimeObjectProperties.TouchedObjectPropertyPrefix}объект", "объект"),
+        ("Свойство.клавиша.пробел", $"{RuntimeObjectProperties.KeyboardKeyPropertyPrefix}пробел", "пробел"),
+        ("Случайное.значение.от.5.до.10", "Случайное.значение.от.5.до.10", "5")
     ];
 
     private void BuildScriptsPage(StackPanel content)
@@ -607,9 +724,46 @@ public partial class MainWindow
             Child = editor
         });
 
+        var statusBar = new Border
+        {
+            Margin = new Thickness(0, 8, 0, 0),
+            Padding = new Thickness(12, 7, 12, 7),
+            Background = BrushFor("PanelBrush"),
+            BorderBrush = BrushFor("HairlineBrush"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(8)
+        };
+        var statusDock = new DockPanel { LastChildFill = false };
+        var leftStatus = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+        var caretInfo = new TextBlock
+        {
+            Text = $"Стр {editor.TextArea.Caret.Line}, Кол {editor.TextArea.Caret.Column}  ·  Строк: {editor.Document.LineCount}",
+            FontSize = 11,
+            Foreground = BrushFor("MutedBrush"),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        editor.TextArea.Caret.PositionChanged += (_, _) =>
+        {
+            caretInfo.Text = $"Стр {editor.TextArea.Caret.Line}, Кол {editor.TextArea.Caret.Column}  ·  Строк: {editor.Document.LineCount}";
+        };
+        leftStatus.Children.Add(caretInfo);
+        DockPanel.SetDock(leftStatus, Dock.Left);
+        statusDock.Children.Add(leftStatus);
+
+        var hintText = new TextBlock
+        {
+            Text = "Ctrl+Пробел для подсказок",
+            FontSize = 11,
+            Foreground = BrushFor("MutedBrush"),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        DockPanel.SetDock(hintText, Dock.Right);
+        statusDock.Children.Add(hintText);
+        statusBar.Child = statusDock;
+
         var status = new TextBlock
         {
-            Margin = new Thickness(0, 10, 0, 0),
+            Margin = new Thickness(0, 8, 0, 0),
             FontSize = 12,
             Foreground = BrushFor("ErrorBrush"),
             Visibility = Visibility.Collapsed
@@ -629,6 +783,7 @@ public partial class MainWindow
             detailSaveTimer.Start();
         };
         AttachScriptCommandSuggestions(editor);
+        content.Children.Add(statusBar);
         content.Children.Add(status);
     }
 
@@ -649,6 +804,12 @@ public partial class MainWindow
                 BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(8),
                 Padding = new Thickness(4),
+                Effect = new System.Windows.Media.Effects.DropShadowEffect
+                {
+                    BlurRadius = 14,
+                    ShadowDepth = 3,
+                    Opacity = 0.16
+                },
                 Child = popupRows
             }
         };
@@ -704,6 +865,104 @@ public partial class MainWindow
             editor.TextArea.Focus();
         }
 
+        void PopulateAndShowSuggestions(string prefix, int lineOffset, int indentLength)
+        {
+            var formulaTokenStart = FindFormulaTokenStart(prefix);
+            var formulaPrefix = prefix[formulaTokenStart..];
+            var formulaReplacementStart = formulaTokenStart;
+            if (formulaPrefix.StartsWith("..", StringComparison.Ordinal))
+            {
+                formulaReplacementStart += 2;
+                formulaPrefix = formulaPrefix[2..];
+            }
+
+            var formulaMatches = ScriptFormulaSuggestions
+                .Where(suggestion => suggestion.Label.StartsWith(formulaPrefix, StringComparison.OrdinalIgnoreCase) ||
+                    suggestion.Command.StartsWith(formulaPrefix, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            var isFormulaCompletion = formulaPrefix.Length > 0 && formulaMatches.Length > 0;
+
+            visibleSuggestions = isFormulaCompletion
+                ? formulaMatches
+                : string.IsNullOrEmpty(prefix)
+                    ? ScriptCommandSuggestions
+                    : ScriptCommandSuggestions
+                        .Where(suggestion => suggestion.Label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ||
+                            suggestion.Command.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                        .ToArray();
+
+            if (visibleSuggestions.Length == 0)
+            {
+                popup.IsOpen = false;
+                popupRows.Children.Clear();
+                return;
+            }
+
+            replacementOffset = lineOffset + indentLength + (isFormulaCompletion ? formulaReplacementStart : 0);
+            replacementLength = isFormulaCompletion ? formulaPrefix.Length : prefix.Length;
+            selectedIndex = 0;
+            popupRows.Children.Clear();
+            foreach (var suggestion in visibleSuggestions)
+            {
+                var (catName, _) = GetSuggestionCategory(suggestion.Label);
+                var rowContent = new DockPanel { LastChildFill = true };
+                var badge = new Border
+                {
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(5, 1, 5, 1),
+                    Margin = new Thickness(10, 0, 0, 0),
+                    Background = BrushFor("SoftBrush"),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Child = new TextBlock
+                    {
+                        Text = catName,
+                        FontSize = 10,
+                        FontWeight = FontWeights.SemiBold,
+                        Foreground = BrushFor("MutedBrush")
+                    }
+                };
+                DockPanel.SetDock(badge, Dock.Right);
+                rowContent.Children.Add(badge);
+                rowContent.Children.Add(new TextBlock
+                {
+                    Text = suggestion.Label,
+                    FontSize = 13,
+                    Foreground = BrushFor("InkBrush"),
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+
+                var row = new Border
+                {
+                    Padding = new Thickness(10, 6, 10, 6),
+                    CornerRadius = new CornerRadius(5),
+                    Background = BrushFor("PanelBrush"),
+                    Child = rowContent
+                };
+                row.MouseEnter += (_, _) => SelectSuggestion(popupRows.Children.IndexOf(row));
+                row.MouseLeftButtonDown += (_, e) =>
+                {
+                    e.Handled = true;
+                    SelectSuggestion(popupRows.Children.IndexOf(row));
+                    AcceptSuggestion();
+                };
+                popupRows.Children.Add(row);
+            }
+
+            SelectSuggestion(0);
+            var caret = editor.TextArea.Caret;
+            var caretPoint = editor.TextArea.TextView.GetVisualPosition(caret.Position, ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineBottom);
+            popup.HorizontalOffset = caretPoint.X;
+            popup.VerticalOffset = caretPoint.Y + 3;
+            popup.IsOpen = true;
+        }
+
+        static int FindFormulaTokenStart(string text)
+        {
+            var tokenStart = text.LastIndexOfAny([' ', '\t', '=', '+', '-', '*', '/', '(', ',', '<', '>']) + 1;
+            var quoteIndex = text.LastIndexOf('"');
+            return quoteIndex >= tokenStart ? text.Length : tokenStart;
+        }
+
         void RefreshSuggestions()
         {
             if (!editor.IsKeyboardFocusWithin)
@@ -718,59 +977,32 @@ public partial class MainWindow
             var textBeforeCaret = editor.Document.GetText(line.Offset, caretColumn);
             var indentationLength = textBeforeCaret.Length - textBeforeCaret.TrimStart().Length;
             var prefix = textBeforeCaret[indentationLength..];
-            visibleSuggestions = prefix.Length == 0
-                ? Array.Empty<(string Label, string Command, string? Placeholder)>()
-                : ScriptCommandSuggestions
-                    .Where(suggestion => suggestion.Label.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ||
-                        suggestion.Command.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                    .ToArray();
-
-            if (visibleSuggestions.Length == 0)
+            if (prefix.Length == 0)
             {
                 popup.IsOpen = false;
                 popupRows.Children.Clear();
                 return;
             }
-
-            replacementOffset = line.Offset + indentationLength;
-            replacementLength = prefix.Length;
-            selectedIndex = 0;
-            popupRows.Children.Clear();
-            foreach (var suggestion in visibleSuggestions)
-            {
-                var row = new Border
-                {
-                    Padding = new Thickness(10, 7, 10, 7),
-                    CornerRadius = new CornerRadius(5),
-                    Background = BrushFor("PanelBrush"),
-                    Child = new TextBlock
-                    {
-                        Text = suggestion.Label,
-                        FontSize = 13,
-                        Foreground = BrushFor("InkBrush")
-                    }
-                };
-                row.MouseEnter += (_, _) => SelectSuggestion(popupRows.Children.IndexOf(row));
-                row.MouseLeftButtonDown += (_, e) =>
-                {
-                    e.Handled = true;
-                    SelectSuggestion(popupRows.Children.IndexOf(row));
-                    AcceptSuggestion();
-                };
-                popupRows.Children.Add(row);
-            }
-
-            SelectSuggestion(0);
-            var caretPoint = editor.TextArea.TextView.GetVisualPosition(caret.Position, ICSharpCode.AvalonEdit.Rendering.VisualYPosition.LineBottom);
-            popup.HorizontalOffset = caretPoint.X;
-            popup.VerticalOffset = caretPoint.Y + 3;
-            popup.IsOpen = true;
+            PopulateAndShowSuggestions(prefix, line.Offset, indentationLength);
         }
 
         editor.TextChanged += (_, _) => RefreshSuggestions();
         editor.TextArea.Caret.PositionChanged += (_, _) => RefreshSuggestions();
         editor.TextArea.PreviewKeyDown += (_, e) =>
         {
+            if (e.Key == Key.Space && (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                var caret = editor.TextArea.Caret;
+                var line = editor.Document.GetLineByNumber(caret.Line);
+                var caretColumn = Math.Clamp(caret.Column - 1, 0, line.Length);
+                var textBeforeCaret = editor.Document.GetText(line.Offset, caretColumn);
+                var indentationLength = textBeforeCaret.Length - textBeforeCaret.TrimStart().Length;
+                var prefix = textBeforeCaret[indentationLength..];
+                PopulateAndShowSuggestions(prefix, line.Offset, indentationLength);
+                e.Handled = true;
+                return;
+            }
+
             if (!popup.IsOpen)
             {
                 return;
@@ -1397,12 +1629,13 @@ public partial class MainWindow
 
     private UIElement CreateSoundRow(string path)
     {
+        var isPlaying = string.Equals(soundPreviewPath, path, StringComparison.OrdinalIgnoreCase);
         var row = new Border
         {
             Margin = new Thickness(0, 0, 0, 12),
-            Background = BrushFor("PanelBrush"),
-            BorderBrush = BrushFor("HairlineBrush"),
-            BorderThickness = new Thickness(1),
+            Background = BrushFor(isPlaying ? "AccentSoftBrush" : "PanelBrush"),
+            BorderBrush = BrushFor(isPlaying ? "AccentBrush" : "HairlineBrush"),
+            BorderThickness = new Thickness(isPlaying ? 1.5 : 1),
             CornerRadius = new CornerRadius(10),
             Padding = new Thickness(12, 10, 12, 10)
         };
@@ -1411,12 +1644,11 @@ public partial class MainWindow
         {
             Style = (Style)FindResource("ToolButton"),
             Content = CreateSheetIcon("play", 16),
+            Background = Brushes.Transparent,
             Padding = new Thickness(10, 4, 10, 4),
             ToolTip = "Слушать",
             Margin = new Thickness(0, 0, 10, 0)
         };
-        playButton.Click += (_, _) => ToggleSoundPreview(path, playButton);
-        AutomationProperties.SetName(playButton, $"Слушать {Path.GetFileName(path)}");
         DockPanel.SetDock(playButton, Dock.Left);
         layout.Children.Add(playButton);
         var actionsButton = new Button
@@ -1442,13 +1674,15 @@ public partial class MainWindow
             e.Handled = true;
             CopySoundName(path);
         };
-        info.Children.Add(new TextBlock
+        var title = new TextBlock
         {
             Text = Path.GetFileName(path),
             FontSize = 14,
+            FontWeight = FontWeights.Normal,
             Foreground = BrushFor("InkBrush"),
             TextTrimming = TextTrimming.CharacterEllipsis
-        });
+        };
+        info.Children.Add(title);
         var meta = new TextBlock
         {
             FontSize = 11,
@@ -1456,8 +1690,37 @@ public partial class MainWindow
             Margin = new Thickness(0, 2, 0, 0)
         };
         info.Children.Add(meta);
+        var playingBadge = new Border
+        {
+            Background = BrushFor("AccentBrush"),
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(6, 1, 6, 1),
+            Margin = new Thickness(0, 3, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Visibility = Visibility.Collapsed,
+            Child = new TextBlock
+            {
+                Text = "▶ Воспроизведение…",
+                FontSize = 10,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = Brushes.White
+            }
+        };
+        info.Children.Add(playingBadge);
         layout.Children.Add(info);
         row.Child = layout;
+        playButton.Click += (_, _) => ToggleSoundPreview(path, row, playButton, title, meta, playingBadge);
+        AutomationProperties.SetName(playButton, $"Слушать {Path.GetFileName(path)}");
+        if (isPlaying)
+        {
+            soundPreviewPath = path;
+            soundPreviewRow = row;
+            soundPreviewButton = playButton;
+            soundPreviewTitle = title;
+            soundPreviewMeta = meta;
+            soundPreviewBadge = playingBadge;
+            UpdateSoundPreviewVisualState(isPlaying: true);
+        }
         var actionsPopup = new Popup
         {
             Placement = PlacementMode.Custom,
@@ -1535,12 +1798,6 @@ public partial class MainWindow
             }
         };
         ProbeSoundLength(path, meta);
-
-        if (string.Equals(soundPreviewPath, path, StringComparison.OrdinalIgnoreCase))
-        {
-            soundPreviewButton = playButton;
-            playButton.Content = CreateSheetIcon("stop", 14);
-        }
         return row;
     }
 
@@ -1612,12 +1869,11 @@ public partial class MainWindow
         return (bytes / (1024.0 * 1024)).ToString("0.#") + " МБ";
     }
 
-    private void ToggleSoundPreview(string path, Button button)
+    private void ToggleSoundPreview(string path, Border row, Button button, TextBlock title, TextBlock meta, Border badge)
     {
         if (string.Equals(soundPreviewPath, path, StringComparison.OrdinalIgnoreCase))
         {
             StopSoundPreview();
-            button.Content = CreateSheetIcon("play", 16);
             return;
         }
 
@@ -1631,8 +1887,12 @@ public partial class MainWindow
             soundPreviewPlayer.Open(new Uri(path, UriKind.Absolute));
             soundPreviewPlayer.Play();
             soundPreviewPath = path;
+            soundPreviewRow = row;
             soundPreviewButton = button;
-            button.Content = CreateSheetIcon("stop", 14);
+            soundPreviewTitle = title;
+            soundPreviewMeta = meta;
+            soundPreviewBadge = badge;
+            UpdateSoundPreviewVisualState(isPlaying: true);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or NotSupportedException)
         {
@@ -1665,12 +1925,45 @@ public partial class MainWindow
         catch
         {
         }
-        if (soundPreviewButton is not null)
+        if (soundPreviewRow is not null || soundPreviewButton is not null)
         {
-            soundPreviewButton.Content = CreateSheetIcon("play", 16);
-            soundPreviewButton = null;
+            UpdateSoundPreviewVisualState(isPlaying: false);
         }
         soundPreviewPath = null;
+        soundPreviewRow = null;
+        soundPreviewButton = null;
+        soundPreviewTitle = null;
+        soundPreviewMeta = null;
+        soundPreviewBadge = null;
+    }
+
+    private void UpdateSoundPreviewVisualState(bool isPlaying)
+    {
+        if (soundPreviewRow is not null)
+        {
+            soundPreviewRow.Background = BrushFor(isPlaying ? "AccentSoftBrush" : "PanelBrush");
+            soundPreviewRow.BorderBrush = BrushFor(isPlaying ? "AccentBrush" : "HairlineBrush");
+            soundPreviewRow.BorderThickness = new Thickness(isPlaying ? 1.5 : 1);
+        }
+        if (soundPreviewButton is not null)
+        {
+            soundPreviewButton.Content = CreateSheetIcon(isPlaying ? "stop" : "play", isPlaying ? 14 : 16);
+            soundPreviewButton.Background = isPlaying ? BrushFor("AccentBrush") : Brushes.Transparent;
+            soundPreviewButton.ToolTip = isPlaying ? "Остановить" : "Слушать";
+            AutomationProperties.SetName(soundPreviewButton, $"{(isPlaying ? "Остановить" : "Слушать")} {Path.GetFileName(soundPreviewPath)}");
+        }
+        if (soundPreviewTitle is not null)
+        {
+            soundPreviewTitle.FontWeight = isPlaying ? FontWeights.SemiBold : FontWeights.Normal;
+        }
+        if (soundPreviewMeta is not null)
+        {
+            soundPreviewMeta.Foreground = BrushFor(isPlaying ? "AccentBrush" : "MutedBrush");
+        }
+        if (soundPreviewBadge is not null)
+        {
+            soundPreviewBadge.Visibility = isPlaying ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
     private void StartRecording()
@@ -1727,7 +2020,7 @@ public partial class MainWindow
             {
                 if (recordingLabel is not null)
                 {
-                    recordingLabel.Text = "● Идёт запись " + DateTime.UtcNow.Subtract(recordingStarted).ToString(@"m\:ss");
+                    recordingLabel.Text = "Идёт запись " + DateTime.UtcNow.Subtract(recordingStarted).ToString(@"m\:ss");
                 }
             };
             recorder.StartRecording();
@@ -1799,31 +2092,83 @@ public partial class MainWindow
     {
         var bar = new Border
         {
-            Margin = new Thickness(0, 0, 0, 12),
+            Margin = new Thickness(0, 0, 0, 14),
             Background = BrushFor("PanelBrush"),
             BorderBrush = BrushFor("ErrorBrush"),
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(10),
-            Padding = new Thickness(12, 10, 12, 10)
+            BorderThickness = new Thickness(1.5),
+            CornerRadius = new CornerRadius(12),
+            Padding = new Thickness(14, 12, 14, 12),
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                BlurRadius = 14,
+                ShadowDepth = 2,
+                Color = Color.FromRgb(174, 58, 58),
+                Opacity = 0.18
+            }
         };
         var layout = new DockPanel { LastChildFill = true };
-        recordingLabel = new TextBlock
-        {
-            Text = "● Идёт запись " + DateTime.UtcNow.Subtract(recordingStarted).ToString(@"m\:ss"),
-            FontSize = 14,
-            Foreground = BrushFor("ErrorBrush"),
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        layout.Children.Add(recordingLabel);
+
         var stopButton = new Button
         {
             Style = (Style)FindResource("PrimaryButton"),
-            Content = "Остановить",
-            Padding = new Thickness(14, 6, 14, 6)
+            Background = BrushFor("ErrorBrush"),
+            Content = "Остановить запись",
+            Padding = new Thickness(16, 7, 16, 7)
         };
         stopButton.Click += (_, _) => StopRecording();
         DockPanel.SetDock(stopButton, Dock.Right);
         layout.Children.Add(stopButton);
+
+        var infoPanel = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        var dot = new System.Windows.Shapes.Ellipse
+        {
+            Width = 10,
+            Height = 10,
+            Fill = BrushFor("ErrorBrush"),
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+        var dotAnim = new DoubleAnimation(1.0, 0.2, TimeSpan.FromMilliseconds(500))
+        {
+            AutoReverse = true,
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        dot.BeginAnimation(UIElement.OpacityProperty, dotAnim);
+        infoPanel.Children.Add(dot);
+
+        var recBadge = new Border
+        {
+            Background = BrushFor("ErrorBrush"),
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(5, 2, 5, 2),
+            Margin = new Thickness(0, 0, 10, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = new TextBlock
+            {
+                Text = "REC",
+                FontSize = 10,
+                FontWeight = FontWeights.Bold,
+                Foreground = Brushes.White
+            }
+        };
+        infoPanel.Children.Add(recBadge);
+
+        recordingLabel = new TextBlock
+        {
+            Text = "Идёт запись " + DateTime.UtcNow.Subtract(recordingStarted).ToString(@"m\:ss"),
+            FontSize = 14,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = BrushFor("InkBrush"),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        infoPanel.Children.Add(recordingLabel);
+
+        layout.Children.Add(infoPanel);
         bar.Child = layout;
         return bar;
     }

@@ -61,7 +61,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
             }
             catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
             {
-                AppLog.Write("Не удалось убрать папки несозданной сцены.", cleanupException);
+                CoreLog.Write("Не удалось убрать папки несозданной сцены.", cleanupException);
             }
             error = "Не удалось создать сцену. Проверьте доступ к папке проекта.";
             return false;
@@ -90,18 +90,15 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         }
 
         var oldName = scene.Name;
-        var root = projectStore.GetProjectDirectoryFor(project);
         scene.Name = name;
         try
         {
-            RewriteResourceReferences(Path.Combine(root, "code.txt"), oldName, name);
             projectStore.SaveProject(project);
             return true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             scene.Name = oldName;
-            RewriteResourceReferences(Path.Combine(root, "code.txt"), name, oldName);
             error = "Не удалось переименовать сцену.";
             return false;
         }
@@ -124,7 +121,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         var planned = new List<StagedMove>();
         foreach (var scene in deleting)
         {
-            foreach (var resourceType in new[] { "sounds", "sprites", "scripts" })
+            foreach (var resourceType in new[] { "sounds", "sprites", "scripts", "scenePreviews", "fonts" })
             {
                 var relative = Path.Combine(resourceType, SceneDirectoryName(scene));
                 if (!Directory.Exists(Path.Combine(root, relative)))
@@ -184,7 +181,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             TryDeleteFile(StagingManifestPath(staging));
-            AppLog.Write("Не удалось пометить временную папку удаления как завершённую.", exception);
+            CoreLog.Write("Не удалось пометить временную папку удаления как завершённую.", exception);
         }
 
         try
@@ -196,7 +193,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            AppLog.Write("Сцены удалены, но не удалось очистить временную папку с ресурсами.", exception);
+            CoreLog.Write("Сцены удалены, но не удалось очистить временную папку с ресурсами.", exception);
         }
         return true;
     }
@@ -276,7 +273,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         var staging = Path.Combine(root, $".delete-{Guid.NewGuid():N}");
         var objectIndex = scene.Objects.IndexOf(item);
         var planned = new List<StagedMove>();
-        foreach (var resourceType in new[] { "sounds", "sprites" })
+        foreach (var resourceType in new[] { "sounds", "sprites", "fonts" })
         {
             var relative = Path.Combine(resourceType, SceneDirectoryName(scene), item.Id.ToString("N"));
             if (Directory.Exists(Path.Combine(root, relative)))
@@ -349,7 +346,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             TryDeleteFile(StagingManifestPath(staging));
-            AppLog.Write("Не удалось пометить временную папку удаления как завершённую.", exception);
+            CoreLog.Write("Не удалось пометить временную папку удаления как завершённую.", exception);
         }
 
         try
@@ -361,7 +358,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            AppLog.Write("Объект удалён, но не удалось очистить временную папку с его ресурсами.", exception);
+            CoreLog.Write("Объект удалён, но не удалось очистить временную папку с его ресурсами.", exception);
         }
         return true;
     }
@@ -371,6 +368,9 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         var directory = Path.Combine(projectStore.GetProjectDirectoryFor(project), "scripts", SceneDirectoryName(scene));
         return Path.Combine(directory, objectId.ToString("N") + ".isk");
     }
+
+    public string GetScenePreviewPath(IskraProject project, IskraScene scene) =>
+        Path.Combine(projectStore.GetProjectDirectoryFor(project), "scenePreviews", SceneDirectoryName(scene), "preview.png");
 
     public string GetObjectResourceDirectory(IskraProject project, IskraScene scene, Guid objectId, string resourceType)
     {
@@ -431,9 +431,26 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         return DefaultObjectScript();
     }
 
-    public bool TryWriteObjectScript(IskraProject project, IskraScene scene, Guid objectId, string text, out string? error)
+    public string? GetObjectSetting(IskraProject project, IskraScene scene, IskraObject item, string key) =>
+        item.Settings.TryGetValue(key, out var value) ? value : null;
+
+    public bool SetObjectSetting(IskraProject project, IskraScene scene, IskraObject item, string key, string value)
     {
-        error = null;
+        item.Settings[key] = value;
+        try
+        {
+            projectStore.SaveProject(project);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            CoreLog.Write("Не удалось сохранить настройку объекта.", exception);
+            return false;
+        }
+    }
+
+    public bool TryWriteObjectScript(IskraProject project, IskraScene scene, Guid objectId, string text, out string? error)
+    {        error = null;
         try
         {
             var scriptPath = GetObjectScriptPath(project, scene, objectId);
@@ -451,7 +468,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
     }
 
     private static string DefaultObjectScript() =>
-        "Печать \"Привет мир\"" + Environment.NewLine;
+        "При. запуске" + Environment.NewLine + "Печать \"Привет мир\"" + Environment.NewLine;
 
     private static string LegacyDefaultObjectScript() =>
         "Задать скорость = 0" + Environment.NewLine + "Печать скорость" + Environment.NewLine;
@@ -469,7 +486,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            AppLog.Write("Не удалось удалить файл скрипта.", exception);
+            CoreLog.Write("Не удалось удалить файл скрипта.", exception);
         }
     }
 
@@ -488,7 +505,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
     private void DeleteSceneDirectories(IskraProject project, IskraScene scene)
     {
         var root = projectStore.GetProjectDirectoryFor(project);
-        foreach (var resourceType in new[] { "sounds", "sprites", "scripts" })
+        foreach (var resourceType in new[] { "sounds", "sprites", "scripts", "scenePreviews" })
         {
             var path = Path.Combine(root, resourceType, SceneDirectoryName(scene));
             if (Directory.Exists(path))
@@ -522,7 +539,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
         {
-            AppLog.Write("Не удалось прочитать манифест временной папки удаления.", exception);
+            CoreLog.Write("Не удалось прочитать манифест временной папки удаления.", exception);
         }
 
         if (manifest?.Moves is { Count: > 0 } && !manifest.Committed)
@@ -552,7 +569,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
                     }
                     catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
                     {
-                        AppLog.Write("Не удалось вернуть файл из временной папки удаления.", exception);
+                        CoreLog.Write("Не удалось вернуть файл из временной папки удаления.", exception);
                     }
                 }
             }
@@ -569,7 +586,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                AppLog.Write("Не удалось удалить временную папку удаления.", exception);
+                CoreLog.Write("Не удалось удалить временную папку удаления.", exception);
             }
         }
         else
@@ -584,7 +601,7 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                AppLog.Write("Не удалось удалить пустую временную папку.", exception);
+                CoreLog.Write("Не удалось удалить пустую временную папку.", exception);
             }
         }
     }
@@ -603,29 +620,6 @@ public sealed class ProjectContentStore(ProjectStore projectStore)
                 Directory.CreateDirectory(Path.GetDirectoryName(original)!);
                 File.Move(current, original);
             }
-        }
-    }
-
-    private static void RewriteResourceReferences(string codePath, string oldSceneName, string newSceneName)
-    {
-        if (!File.Exists(codePath))
-        {
-            return;
-        }
-
-        var code = File.ReadAllText(codePath);
-        var escapedOldName = System.Text.RegularExpressions.Regex.Escape(oldSceneName);
-        var pattern = $"(?<quote>[\\\"'])((?:sounds|sprites)/){escapedOldName}(?=/)";
-        var updated = System.Text.RegularExpressions.Regex.Replace(
-            code,
-            pattern,
-            match => $"{match.Groups["quote"].Value}{match.Groups[2].Value}{newSceneName}",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        if (!string.Equals(code, updated, StringComparison.Ordinal))
-        {
-            var temporaryPath = codePath + ".tmp";
-            File.WriteAllText(temporaryPath, updated);
-            File.Move(temporaryPath, codePath, overwrite: true);
         }
     }
 

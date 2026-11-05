@@ -6,6 +6,7 @@ public partial class App : Application
 {
     public App()
     {
+        CoreLog.Sink = AppLog.Write;
         DispatcherUnhandledException += (_, e) =>
         {
             AppLog.Write("Необработанная ошибка приложения.", e.Exception);

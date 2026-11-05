@@ -141,9 +141,9 @@ public sealed class ScriptEventAndPropertyTests
             [RuntimeObjectProperties.KeyboardKeyPropertyPrefix + "a"] = "истина"
         };
 
-        Assert.Equal("истина", ProjectRuntime.ResolveValue("Свойство.клавиша.ф", variables));
-        Assert.Equal("истина", ProjectRuntime.ResolveValue("свойство.КЛАВИША.Ф", variables));
-        Assert.Equal("ложь", ProjectRuntime.ResolveValue("Свойство.клавиша.б", variables));
+        Assert.Equal("истина", RuntimeValueResolver.ResolveValue("Свойство.клавиша.ф", variables));
+        Assert.Equal("истина", RuntimeValueResolver.ResolveValue("свойство.КЛАВИША.Ф", variables));
+        Assert.Equal("ложь", RuntimeValueResolver.ResolveValue("Свойство.клавиша.б", variables));
     }
 
     [Fact]
@@ -155,10 +155,10 @@ public sealed class ScriptEventAndPropertyTests
             [RuntimeObjectProperties.KeyboardKeyPropertyPrefix + "`"] = "ложь"
         };
 
-        Assert.Equal("истина", ProjectRuntime.ResolveValue("Свойство.клавиша.пробел", variables));
-        Assert.Equal("истина", ProjectRuntime.ResolveValue("Свойство.клавиша.ПРОБЕЛ", variables));
-        Assert.Equal("ложь", ProjectRuntime.ResolveValue("Свойство.клавиша.ё", variables));
-        Assert.Equal("ложь", ProjectRuntime.ResolveValue("Свойство.клавиша.прыжок", variables));
+        Assert.Equal("истина", RuntimeValueResolver.ResolveValue("Свойство.клавиша.пробел", variables));
+        Assert.Equal("истина", RuntimeValueResolver.ResolveValue("Свойство.клавиша.ПРОБЕЛ", variables));
+        Assert.Equal("ложь", RuntimeValueResolver.ResolveValue("Свойство.клавиша.ё", variables));
+        Assert.Equal("ложь", RuntimeValueResolver.ResolveValue("Свойство.клавиша.прыжок", variables));
     }
 
     [Fact]

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg>

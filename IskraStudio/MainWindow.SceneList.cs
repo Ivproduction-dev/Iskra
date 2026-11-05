@@ -23,6 +23,7 @@ public partial class MainWindow
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = "Список сцен";
+        UpdateBreadcrumbs();
         WorkspaceBackButton.Content = CreateIconContent("arrowleft", "Проекты");
         WorkspaceMenuButton.ToolTip = "Действия со сценами";
         WorkspaceMenuButton.Visibility = Visibility.Visible;
@@ -98,7 +99,31 @@ public partial class MainWindow
         openButton.Click += SceneRow_Click;
         AutomationProperties.SetName(openButton, $"Открыть сцену {scene.Name}");
 
-        var main = new Grid { Margin = new Thickness(96, 0, 64, 0) };
+        var main = new Grid
+        {
+            Margin = new Thickness(workspaceSelectionMode == WorkspaceSelectionMode.None ? 12 : 56, 12, 64, 12)
+        };
+        main.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(96) });
+        main.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var preview = LoadPreviewImage(activeProject is null ? null : projectContentStore.GetScenePreviewPath(activeProject, scene));
+        main.Children.Add(new Border
+        {
+            Width = 96,
+            Height = 96,
+            CornerRadius = new CornerRadius(10),
+            Background = BrushFor("SoftBrush"),
+            ClipToBounds = true,
+            Child = preview is not null
+                ? new Image { Source = preview, Stretch = Stretch.Uniform }
+                : new Image
+                {
+                    Source = (ImageSource)FindResource("Icon.Spark"),
+                    Width = 40,
+                    Height = 40,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                }
+        });
         var name = new TextBlock
         {
             Text = scene.Name,
@@ -106,9 +131,11 @@ public partial class MainWindow
             FontWeight = FontWeights.SemiBold,
             Foreground = BrushFor("InkBrush"),
             VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(12, 0, 0, 0),
             TextTrimming = TextTrimming.CharacterEllipsis,
             ToolTip = scene.Name
         };
+        Grid.SetColumn(name, 1);
         main.Children.Add(name);
         openButton.Content = main;
         row.Children.Add(openButton);

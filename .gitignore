@@ -1,15 +1,24 @@
-# MSVC build artifacts
 *.obj
 *.pdb
 *.ilk
 *.pch
+*.user
+*.suo
+*.tmp
+bin/
+obj/
+.vs/
+TestResults/
+/build-*/
+/.iskra-qa-data/
 /ruslang.exe
 /iskra-runtime.exe
 /iskra-tests.exe
-
-# Visual Studio and .NET build artifacts
-.vs/
-IskraStudio/bin/
-IskraStudio/obj/
-tests/bin/
-tests/obj/
+*.apk
+*.aab
+*.msix
+*.appx
+Thumbs.db
+.DS_Store
+/Задача.txt
+*.log

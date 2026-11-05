@@ -52,6 +52,78 @@ internal sealed class SpriteAlphaMask
         return x >= 0 && x < Width && y >= 0 && y < Height && alpha[y * Width + x] > 0;
     }
 
+    internal bool ContainsOpaquePixel(double x, double y, bool flipX = false, bool flipY = false)
+    {
+        if (flipX) x = Width - x;
+        if (flipY) y = Height - y;
+        var pixelX = (int)Math.Floor(x);
+        var pixelY = (int)Math.Floor(y);
+        return pixelX >= 0 && pixelX < Width && pixelY >= 0 && pixelY < Height && alpha[pixelY * Width + pixelX] > 0;
+    }
+
+    public static bool Intersects(BitmapSource first, Rect firstBounds, bool firstFlipX,
+        BitmapSource second, Rect secondBounds, bool secondFlipX)
+    {
+        return Intersects(first, firstBounds, firstBounds.Width, firstBounds.Height, firstFlipX, false, 0d,
+            second, secondBounds, secondBounds.Width, secondBounds.Height, secondFlipX, false, 0d);
+    }
+
+    public static bool Intersects(BitmapSource first, Rect firstBounds, double firstWidth, double firstHeight,
+        bool firstFlipX, bool firstFlipY, double firstDirection,
+        BitmapSource second, Rect secondBounds, double secondWidth, double secondHeight,
+        bool secondFlipX, bool secondFlipY, double secondDirection)
+    {
+        var overlap = Rect.Intersect(firstBounds, secondBounds);
+        if (overlap.IsEmpty || overlap.Width <= 0 || overlap.Height <= 0) return false;
+        var firstMask = cache.GetValue(first, Create);
+        var secondMask = cache.GetValue(second, Create);
+        var stepX = Math.Min(firstWidth / firstMask.Width, secondWidth / secondMask.Width);
+        var stepY = Math.Min(firstHeight / firstMask.Height, secondHeight / secondMask.Height);
+        if (!double.IsFinite(stepX) || !double.IsFinite(stepY) || stepX <= 0 || stepY <= 0) return false;
+
+        var firstCenter = new Point(firstBounds.Left + firstBounds.Width / 2d, firstBounds.Top + firstBounds.Height / 2d);
+        var secondCenter = new Point(secondBounds.Left + secondBounds.Width / 2d, secondBounds.Top + secondBounds.Height / 2d);
+        var firstRadians = firstDirection * Math.PI / 180d;
+        var secondRadians = secondDirection * Math.PI / 180d;
+        var firstCosine = Math.Cos(firstRadians);
+        var firstSine = Math.Sin(firstRadians);
+        var secondCosine = Math.Cos(secondRadians);
+        var secondSine = Math.Sin(secondRadians);
+
+        var samplesX = Math.Ceiling(overlap.Width / stepX);
+        var samplesY = Math.Ceiling(overlap.Height / stepY);
+        const double maximumSamples = 250_000d;
+        if (samplesX * samplesY > maximumSamples)
+        {
+            var factor = Math.Sqrt(samplesX * samplesY / maximumSamples);
+            stepX *= factor;
+            stepY *= factor;
+        }
+
+        for (var y = overlap.Top + stepY / 2d; y < overlap.Bottom; y += stepY)
+        {
+            for (var x = overlap.Left + stepX / 2d; x < overlap.Right; x += stepX)
+            {
+                if (ContainsOpaqueAt(firstMask, x, y, firstCenter, firstWidth, firstHeight,
+                        firstCosine, firstSine, firstFlipX, firstFlipY) &&
+                    ContainsOpaqueAt(secondMask, x, y, secondCenter, secondWidth, secondHeight,
+                        secondCosine, secondSine, secondFlipX, secondFlipY)) return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool ContainsOpaqueAt(SpriteAlphaMask mask, double worldX, double worldY, Point center,
+        double width, double height, double cosine, double sine, bool flipX, bool flipY)
+    {
+        var offsetX = worldX - center.X;
+        var offsetY = worldY - center.Y;
+        var localX = offsetX * cosine + offsetY * sine + width / 2d;
+        var localY = -offsetX * sine + offsetY * cosine + height / 2d;
+        if (localX < 0d || localX >= width || localY < 0d || localY >= height) return false;
+        return mask.ContainsOpaquePixel(localX * mask.Width / width, localY * mask.Height / height, flipX, flipY);
+    }
+
     internal static SpriteAlphaMask FromBgra32(int width, int height, byte[] pixels)
     {
         var alpha = new byte[width * height];

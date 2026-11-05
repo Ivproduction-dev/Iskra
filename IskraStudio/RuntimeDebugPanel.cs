@@ -52,14 +52,16 @@ internal sealed class RuntimeDebugPanel : UserControl
             var row = new Grid { Margin = new Thickness(0, 2, 0, 2) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            var location = string.Join(" · ", new[] { variable.SceneName, variable.ObjectName, variable.Name }
+                .Where(part => !string.IsNullOrWhiteSpace(part)));
             var name = new TextBlock
             {
-                Text = $"{variable.SceneName} · {variable.ObjectName} · {variable.Name}",
+                Text = location,
                 Foreground = DebugBrush("OnDarkMutedBrush", Color.FromRgb(184, 179, 170)),
                 FontSize = 12,
                 TextTrimming = TextTrimming.CharacterEllipsis,
                 VerticalAlignment = VerticalAlignment.Center,
-                ToolTip = $"{variable.SceneName} · {variable.ObjectName} · {variable.Name}"
+                ToolTip = location
             };
             var value = new TextBlock
             {

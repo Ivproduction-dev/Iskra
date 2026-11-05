@@ -1,7 +1,7 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$runtimeCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.Runtime.cs') -Raw
+$runtimeCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.Runtime.cs') -Raw -Encoding UTF8
 $backgroundNavigation = [regex]::Match(
     $runtimeCode,
     'IskraObject\? item = diagnostic\.ObjectId == IskraObject\.BackgroundId\s*\? new IskraObject \{ Id = IskraObject\.BackgroundId, Name = "Фон" \}'

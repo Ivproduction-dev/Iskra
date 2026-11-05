@@ -196,7 +196,7 @@ public sealed class KeyboardKeySyntaxTests
     [InlineData(Key.Escape, "отмена")]
     [InlineData(Key.Back, "забой")]
     public void PhysicalKeysMapToCanonicalIds(Key key, string expected) =>
-        Assert.Equal(expected, KeyboardKeySyntax.NormalizeKey(key));
+        Assert.Equal(expected, KeyboardKeyMapper.NormalizeKey(key));
 
     [Theory]
     [InlineData(Key.F1)]
@@ -205,5 +205,5 @@ public sealed class KeyboardKeySyntaxTests
     [InlineData(Key.Tab)]
     [InlineData(Key.Delete)]
     public void UnsupportedPhysicalKeysMapToNothing(Key key) =>
-        Assert.Null(KeyboardKeySyntax.NormalizeKey(key));
+        Assert.Null(KeyboardKeyMapper.NormalizeKey(key));
 }

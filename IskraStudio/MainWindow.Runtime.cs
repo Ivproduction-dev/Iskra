@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 namespace IskraStudio;
@@ -39,6 +40,22 @@ public partial class MainWindow
 
         FlushScriptSave();
         var project = activeProject;
+        var scene = project.Scenes.FirstOrDefault(item => activeScene is not null && item.Id == activeScene.Id);
+        if (project.Scenes.Count == 0)
+        {
+            MessageBox.Show(this, "Создай сцену, чтобы запустить проект.", "Нет сцен", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        if (SceneLaunchPolicy.RequiresSceneChoice(project.Scenes, scene))
+        {
+            var picker = new SceneLaunchPickerWindow(project.Scenes, scene) { Owner = this };
+            if (picker.ShowDialog() != true || picker.SelectedScene is null)
+            {
+                return;
+            }
+            scene = picker.SelectedScene;
+        }
+        scene ??= project.Scenes[0];
         AppLog.Write($"Запуск проекта начат: {project.Name}.");
         EditorRunOverlay.Visibility = Visibility.Collapsed;
         SetRuntimeLaunchState("Проверяем все сценарии проекта…", loading: true);
@@ -69,26 +86,15 @@ public partial class MainWindow
                 return;
             }
 
-            var scene = activeScene is not null && project.Scenes.Any(item => item.Id == activeScene.Id)
-                ? project.Scenes.First(item => item.Id == activeScene.Id)
-                : project.Scenes[0];
             runtimeDebugPanel.BeginRun();
             SetRuntimeLaunchState("Открываем игровое окно…", loading: true);
             var gameWindow = new GameWindow(project.Orientation) { Owner = this };
             PositionGameWindowBesideEditor(gameWindow);
+            gameWindow.ContentRendered += (_, _) => SaveScenePreview(project, scene, gameWindow.SceneSurface);
             runningGameWindow = gameWindow;
             runningGameCancellation = new CancellationTokenSource();
-            gameWindow.Closed += (_, _) =>
-            {
-                runningGameCancellation?.Cancel();
-                runningGameCancellation?.Dispose();
-                runningGameCancellation = null;
-                runningGameWindow = null;
-                StopRuntimeFacts();
-                RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
-                EditorRunOverlay.Visibility = Visibility.Collapsed;
-                UpdateWorkspaceModalLayer();
-            };
+            gameWindow.Closing += (_, _) => FinishGameRun(gameWindow);
+            gameWindow.Closed += (_, _) => FinishGameRun(gameWindow);
             gameWindow.Show();
             RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
             EditorRunStatus.Text = "Закройте окно игры, чтобы продолжить разработку";
@@ -117,6 +123,77 @@ public partial class MainWindow
             ]);
             openingDiagnosticFromLaunch = true;
             OpenDiagnosticsDialog();
+        }
+    }
+
+    private void FinishGameRun(GameWindow gameWindow)
+    {
+        if (!ReferenceEquals(runningGameWindow, gameWindow))
+        {
+            return;
+        }
+
+        runningGameWindow = null;
+        var cancellation = runningGameCancellation;
+        runningGameCancellation = null;
+        cancellation?.Cancel();
+        cancellation?.Dispose();
+        StopRuntimeFacts();
+        RuntimeLaunchOverlay.Visibility = Visibility.Collapsed;
+        EditorRunOverlay.Visibility = Visibility.Collapsed;
+        UpdateWorkspaceModalLayer();
+    }
+
+    private void SaveScenePreview(IskraProject project, IskraScene scene, FrameworkElement sceneSurface)
+    {
+        string? temporaryPath = null;
+        try
+        {
+            sceneSurface.UpdateLayout();
+            var pixelWidth = (int)Math.Ceiling(sceneSurface.ActualWidth);
+            var pixelHeight = (int)Math.Ceiling(sceneSurface.ActualHeight);
+            if (pixelWidth <= 0 || pixelHeight <= 0)
+            {
+                return;
+            }
+
+            var renderedScene = new RenderTargetBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Pbgra32);
+            renderedScene.Render(sceneSurface);
+            var scale = Math.Min(480d / pixelWidth, 480d / pixelHeight);
+            var preview = new TransformedBitmap(renderedScene, new ScaleTransform(scale, scale));
+            preview.Freeze();
+
+            var previewPath = projectContentStore.GetScenePreviewPath(project, scene);
+            Directory.CreateDirectory(Path.GetDirectoryName(previewPath)!);
+            temporaryPath = previewPath + ".tmp";
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(preview));
+            using (var output = new FileStream(temporaryPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                encoder.Save(output);
+            }
+            File.Move(temporaryPath, previewPath, overwrite: true);
+            temporaryPath = null;
+
+            if (ReferenceEquals(activeProject, project) && !showingObjects && !showingDetail && !showingPainting)
+            {
+                BuildSceneList();
+            }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException)
+        {
+            AppLog.Write($"Не удалось сохранить превью сцены «{scene.Name}».", exception);
+            if (temporaryPath is not null && File.Exists(temporaryPath))
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
+                {
+                    AppLog.Write("Не удалось удалить временное превью сцены.", cleanupException);
+                }
+            }
         }
     }
 

@@ -214,9 +214,6 @@ public sealed class ProjectArchiveService(ProjectStore projectStore)
             project.Name = newName;
             Directory.CreateDirectory(Path.Combine(temporaryPath, "sounds"));
             Directory.CreateDirectory(Path.Combine(temporaryPath, "sprites"));
-            File.WriteAllText(Path.Combine(temporaryPath, "code.txt"), File.Exists(Path.Combine(temporaryPath, "code.txt"))
-                ? File.ReadAllText(Path.Combine(temporaryPath, "code.txt"))
-                : string.Empty);
             foreach (var scene in project.Scenes)
             {
                 ProjectStore.MigrateLegacySceneDirectories(temporaryPath, scene);

@@ -56,17 +56,21 @@ bool parse_integer(const std::string& text, long long& result) {
 }
 
 bool parse_string(const std::string& text, std::string& result) {
-    if (text.size() < 2 || text.front() != '"' || text.back() != '"') return false;
+    if (text.size() < 2 || text.front() != '"') return false;
     result.clear();
-    for (std::size_t i = 1; i + 1 < text.size(); ++i) {
-        if (text[i] == '\\' && i + 2 < text.size() && (text[i + 1] == '"' || text[i + 1] == '\\')) {
+    for (std::size_t i = 1; i < text.size(); ++i) {
+        if (text[i] == '"') {
+            if (i + 1 != text.size()) return false;
+            return true;
+        }
+        if (text[i] == '\\' && i + 1 < text.size() && (text[i + 1] == '"' || text[i + 1] == '\\')) {
             result += text[i + 1];
             ++i;
-        } else {
-            result += text[i];
+            continue;
         }
+        result += text[i];
     }
-    return true;
+    return false;
 }
 
 std::string trim_spaces(std::string value) {
@@ -278,7 +282,7 @@ bool run_line(const std::string& source, Variables& variables, std::size_t line_
 }
 
 bool is_if_keyword(const std::string& keyword) {
-    return keyword == "если" || keyword == "есле" || keyword == "если";
+    return keyword == "если" || keyword == "есле" || keyword == "эсли";
 }
 
 bool is_end_keyword(const std::string& keyword) {

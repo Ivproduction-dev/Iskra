@@ -26,6 +26,7 @@ public partial class MainWindow
         workspaceSelectionMode = WorkspaceSelectionMode.None;
         selectedSceneIds.Clear();
         WorkspaceTitle.Text = scene.Name;
+        UpdateBreadcrumbs();
         WorkspaceBackButton.Content = CreateIconContent("arrowleft", "Список сцен");
         WorkspaceMenuButton.ToolTip = "Действия со сценой";
         WorkspaceMenuButton.Visibility = Visibility.Visible;
@@ -413,6 +414,7 @@ public partial class MainWindow
         if (showingObjects && activeScene is not null)
         {
             WorkspaceTitle.Text = activeScene.Name;
+            UpdateBreadcrumbs();
             BuildObjectList();
         }
         else

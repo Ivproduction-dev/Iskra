@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Искра — образцы иконок</title>
+<style>
+  :root { --ink:#141413; --body:#3d3d3a; --muted:#6c6a64; --canvas:#faf9f5; --panel:#ffffff; --dark:#211f1c; --dark2:#171614; --accent:#a9583e; }
+  body { margin:0; padding:28px 34px 60px; background:var(--canvas); color:var(--ink);
+         font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin-bottom:26px; }
+  section { margin:0 0 34px; }
+  h2 { font-size:17px; margin:0 0 2px; }
+  .note { color:var(--muted); font-size:12px; margin:0 0 12px; }
+  .card { background:var(--panel); border:1px solid #e6dfd8; border-radius:14px; padding:16px 18px; }
+  .row { display:flex; align-items:flex-end; gap:26px; flex-wrap:wrap; }
+  .cell { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .cell .tag { font-size:10px; color:var(--muted); }
+  .darkcard { background:var(--dark); border-color:#403c36; }
+  .darkrow { display:flex; align-items:flex-end; gap:26px; flex-wrap:wrap; background:var(--dark); border-radius:12px; padding:14px 18px; margin-top:12px; }
+  .darkrow .tag { color:#aaa59c; }
+  .fab { width:68px; height:68px; border-radius:34px; background:var(--accent); display:flex; align-items:center; justify-content:center; }
+  .fab:hover { background:#8f4430; }
+  .fab svg { width:40px; height:40px; filter:brightness(0) invert(1); opacity:0.97; }
+  .sizes { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; }
+  .chip { border-radius:10px; padding:10px 12px; display:flex; align-items:center; justify-content:center; gap:14px; }
+  .chip.light { background:#ffffff; border:1px solid #e6dfd8; }
+  .chip.cream { background:#f5f0e8; border:1px solid #e6dfd8; }
+  .chip.dark { background:#211f1c; }
+  .chip.dark2 { background:#171614; }
+</style>
+</head>
+<body>
+<h1>Искра · редизайн иконок — образцы стилей</h1>
+<div class="sub">Сетка 24×24, вектор. Показаны в реальных размерах интерфейса (16 / 22 / 34) и увеличенно. На FAB-кнопках (68 px) иконки белые, как будет в приложении.</div><section><h2>A · Плоский дуотон</h2><div class="note">два тона, смещённая тень, глянцевый блик</div><div class="card"><div class="row"><div class="cell"><div class="fab"><svg class="fab-inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg></div><span class="tag">Запуск (FAB 68)</span></div><div class="cell"><div class="fab">
+<svg viewBox="0 0 24 24" style="width:38px;height:38px"><path d="M12,4.8 V19.2 M4.8,12 H19.2" stroke="#fff" stroke-width="3.4" stroke-linecap="round" fill="none"/><path d="M18.4,3.4 c0.28,1.0 0.62,1.36 1.62,1.64 c-1.0,0.28 -1.34,0.62 -1.62,1.62 c-0.28,-1.0 -0.62,-1.34 -1.62,-1.62 c1.0,-0.28 1.34,-0.64 1.62,-1.64 z" fill="#fff" opacity="0.9"/></svg>
+</div><span class="tag">Создать (FAB 68)</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg><span class="tag">import · 34</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg><span class="tag">pencil · 34</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg><span class="tag">sound · 34</span></div></div><div style="margin-top:14px"><div class="tag" style="margin:10px 0 6px">белая панель · 22 и 16 px</div><div class="row" style="gap:14px"><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg></div></div><div class="tag" style="margin:10px 0 6px">кремовый фон #F5F0E8</div><div class="row" style="gap:14px"><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg></div></div><div class="tag" style="margin:10px 0 6px">тёмная тема #211F1C</div><div class="row" style="gap:14px"><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg></div></div></div><div class="darkrow"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#7CAE8A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#557E63" stroke-width="1.0" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12,3.5 L12,12.2" stroke="#C05B39" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M12.72,4.3 L12.72,11.3" stroke="#8F4327" stroke-width="1.3" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M12,11.4 L16.5,11.4 L12,16.6 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.2" stroke-linejoin="round" opacity="0.92"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L8.11,15.89 L5.0,19.0 Z" fill="#F3E3BB" stroke="#F3E3BB" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L9.24,17.02 L5.0,19.0 Z" fill="#DEC28C" stroke="#DEC28C" stroke-width="1.15" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#E7A94F" stroke="#E7A94F" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M8.11,15.89 L13.06,10.94 L14.44,12.32 L9.49,17.27 Z" fill="#BC7F2C" stroke="#BC7F2C" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C08A3E" stroke="#C08A3E" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#B45E79" stroke="#B45E79" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#F4CE8A" stroke-width="0.95" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M8.3,5.7 L19.3,12.5 L8.3,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="#C05B39" stroke="#C05B39" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.7,7.5 L15.5,11.0" stroke="#DD8A5F" stroke-width="1.3" stroke-linecap="round" opacity="0.9"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#4E9A94" stroke="#4E9A94" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#35706B" stroke="#35706B" stroke-width="1.3" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#E7A94F" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F4CE8A" stroke-width="2.2" stroke-linecap="round"/>
+</svg><span class="tag">на тёмном фоне · 34 px</span></div></div></section><section><h2>B · Сочный градиент</h2><div class="note">объёмные градиенты, блики, больше оттенков</div><div class="card"><div class="row"><div class="cell"><div class="fab"><svg class="fab-inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg></div><span class="tag">Запуск (FAB 68)</span></div><div class="cell"><div class="fab">
+<svg viewBox="0 0 24 24" style="width:38px;height:38px"><path d="M12,4.8 V19.2 M4.8,12 H19.2" stroke="#fff" stroke-width="3.4" stroke-linecap="round" fill="none"/><path d="M18.4,3.4 c0.28,1.0 0.62,1.36 1.62,1.64 c-1.0,0.28 -1.34,0.62 -1.62,1.62 c-0.28,-1.0 -0.62,-1.34 -1.62,-1.62 c1.0,-0.28 1.34,-0.64 1.62,-1.64 z" fill="#fff" opacity="0.9"/></svg>
+</div><span class="tag">Создать (FAB 68)</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg><span class="tag">import · 34</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg><span class="tag">pencil · 34</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg><span class="tag">sound · 34</span></div></div><div style="margin-top:14px"><div class="tag" style="margin:10px 0 6px">белая панель · 22 и 16 px</div><div class="row" style="gap:14px"><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg></div></div><div class="tag" style="margin:10px 0 6px">кремовый фон #F5F0E8</div><div class="row" style="gap:14px"><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg></div></div><div class="tag" style="margin:10px 0 6px">тёмная тема #211F1C</div><div class="row" style="gap:14px"><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg></div></div></div><div class="darkrow"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="ga" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.6" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+    <linearGradient id="gt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A9CDB2"/>
+      <stop offset="0.55" stop-color="#7CAE8A"/>
+      <stop offset="1" stop-color="#557E63"/>
+    </linearGradient>
+  </defs>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="url(#gt)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.4,16.9 Q7.6,18.2 9.0,18.2 L15.0,18.2 Q16.4,18.2 16.6,16.9" fill="none" stroke="#3F6350" stroke-width="1.0" stroke-linecap="round" opacity="0.5"/>
+  <path d="M12,3.5 L12,12.2" stroke="url(#ga)" stroke-width="2.7" stroke-linecap="round"/>
+  <path d="M7.5,11.4 L12,16.6 L16.5,11.4 Z" fill="url(#ga)" stroke="url(#ga)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M10.4,12.6 L11.5,13.8" stroke="#FFD3B8" stroke-width="1.0" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gb" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="0.5" stop-color="#E7A94F"/>
+      <stop offset="1" stop-color="#BC7F2C"/>
+    </linearGradient>
+    <linearGradient id="ge" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#D08CA1"/>
+      <stop offset="0.6" stop-color="#B45E79"/>
+      <stop offset="1" stop-color="#8A4558"/>
+    </linearGradient>
+    <linearGradient id="gw" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#F8F1DE"/>
+      <stop offset="1" stop-color="#D8BE8A"/>
+    </linearGradient>
+    <linearGradient id="gf" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#DFAF6A"/>
+      <stop offset="1" stop-color="#A86F2A"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#4A3F34"/>
+      <stop offset="1" stop-color="#241E19"/>
+    </linearGradient>
+  </defs>
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="url(#gw)" stroke="url(#gw)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="url(#gg)" stroke="url(#gg)" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="url(#gb)" stroke="url(#gb)" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="url(#gf)" stroke="url(#gf)" stroke-width="1.2" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="url(#ge)" stroke="url(#ge)" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.4,10.3 L8.2,14.5" stroke="#FBDFA6" stroke-width="1.0" stroke-linecap="round" opacity="0.95"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0" x2="0.78" y2="1">
+      <stop offset="0" stop-color="#E0926A"/>
+      <stop offset="0.55" stop-color="#C05B39"/>
+      <stop offset="1" stop-color="#8F4327"/>
+    </linearGradient>
+  </defs>
+  <path d="M8.2,5.7 L19.2,12.5 L8.2,19.1 Z" fill="#8F4327" stroke="#8F4327" stroke-width="2.9" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M7.3,5.1 L18.3,11.9 L7.3,18.5 Z" fill="url(#g)" stroke="url(#g)" stroke-width="2.9" stroke-linejoin="round"/>
+  <path d="M9.5,7.3 L14.3,10.1" stroke="#FFD3B8" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>
+  <path d="M9.0,9.1 L11.5,10.6" stroke="#FFD3B8" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="gs" x1="0.1" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#7FC0BA"/>
+      <stop offset="0.55" stop-color="#4E9A94"/>
+      <stop offset="1" stop-color="#35706B"/>
+    </linearGradient>
+    <linearGradient id="gw1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4CE8A"/>
+      <stop offset="1" stop-color="#D89B3F"/>
+    </linearGradient>
+  </defs>
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="url(#gs)" stroke="url(#gs)" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M9.0,9.3 L12.7,6.5 L12.7,17.5 L9.0,14.7 Z" fill="#35706B" stroke="#35706B" stroke-width="1.2" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="url(#gw1)" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#EFC172" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M5.2,10.8 L6.4,10.8" stroke="#B7E0D5" stroke-width="0.9" stroke-linecap="round" opacity="0.75"/>
+</svg><span class="tag">на тёмном фоне · 34 px</span></div></div></section><section><h2>C · Тёплый контур</h2><div class="note">толстый тёмный контур + плотные заливки</div><div class="card"><div class="row"><div class="cell"><div class="fab"><svg class="fab-inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg></div><span class="tag">Запуск (FAB 68)</span></div><div class="cell"><div class="fab">
+<svg viewBox="0 0 24 24" style="width:38px;height:38px"><path d="M12,4.8 V19.2 M4.8,12 H19.2" stroke="#fff" stroke-width="3.4" stroke-linecap="round" fill="none"/><path d="M18.4,3.4 c0.28,1.0 0.62,1.36 1.62,1.64 c-1.0,0.28 -1.34,0.62 -1.62,1.62 c-0.28,-1.0 -0.62,-1.34 -1.62,-1.62 c1.0,-0.28 1.34,-0.64 1.62,-1.64 z" fill="#fff" opacity="0.9"/></svg>
+</div><span class="tag">Создать (FAB 68)</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><span class="tag">import · 34</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg><span class="tag">pencil · 34</span></div><div class="cell"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg><span class="tag">sound · 34</span></div></div><div style="margin-top:14px"><div class="tag" style="margin:10px 0 6px">белая панель · 22 и 16 px</div><div class="row" style="gap:14px"><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg></div><div class="chip light"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg></div></div><div class="tag" style="margin:10px 0 6px">кремовый фон #F5F0E8</div><div class="row" style="gap:14px"><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg></div><div class="chip cream"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg></div></div><div class="tag" style="margin:10px 0 6px">тёмная тема #211F1C</div><div class="row" style="gap:14px"><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg></div><div class="chip dark"><svg class="w22" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg><svg class="w16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg></div></div></div><div class="darkrow"><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#37302A" stroke-width="4.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M5.9,13.9 L5.6,17.2 Q5.5,19.4 7.7,19.4 L16.3,19.4 Q18.5,19.4 18.4,17.2 L18.1,13.9" fill="none" stroke="#8CBB97" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.1,3.6 L11.1,13.6 M6.7,10.6 L11.1,15.3 L15.5,10.6" fill="none" stroke="#37302A" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12,3.6 L12,14.6 M7.6,11.6 L12,16.4 L16.4,11.6" fill="none" stroke="#D96A44" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M6.98,14.76 L9.24,17.02 L5.0,19.0 Z" fill="#F3E3BB" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M5.0,19.0 L6.70,18.44 L5.56,17.30 Z" fill="#37302A" stroke="#37302A" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M6.73,14.51 L11.68,9.56 L13.06,10.94 L8.11,15.89 Z" fill="#F0B75C" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M11.68,9.56 L14.44,12.32 L15.64,11.12 L12.88,8.36 Z" fill="#C99040" stroke="#37302A" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M12.88,8.36 L15.64,11.12 L17.76,9.0 L15.0,6.24 Z" fill="#C4698A" stroke="#37302A" stroke-width="1.7" stroke-linejoin="round"/>
+  <path d="M12.3,10.4 L8.4,14.3" stroke="#FBE3B0" stroke-width="1.0" stroke-linecap="round" opacity="0.9"/>
+  <path d="M7.6,16.7 L7.0,16.1" stroke="#37302A" stroke-width="0.9" stroke-linecap="round" opacity="0.55"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M7.6,4.9 L18.6,11.7 L7.6,18.7 Z" fill="#D96A44" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round"/>
+  <path d="M10.1,8.0 L14.2,10.4" stroke="#FFD3B8" stroke-width="1.3" stroke-linecap="round" opacity="0.8"/>
+</svg><svg class="w34" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <path d="M4.1,9.7 L7.4,9.7 L11.9,6.1 Q12.7,5.5 12.7,6.5 L12.7,17.5 Q12.7,18.5 11.9,17.9 L7.4,14.3 L4.1,14.3 Q3.4,14.3 3.4,13.6 L3.4,10.4 Q3.4,9.7 4.1,9.7 Z" fill="#5BA39D" stroke="#37302A" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8.8,9.5 L12.7,6.6 L12.7,17.4 L8.8,14.5 Z" fill="#41857F" stroke="#41857F" stroke-width="1.1" stroke-linejoin="round" opacity="0.7"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M15.3,9.3 Q17.2,12.0 15.3,14.7" fill="none" stroke="#EFBB5C" stroke-width="1.9" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#37302A" stroke-width="3.7" stroke-linecap="round"/>
+  <path d="M18.2,7.1 Q21.3,12.0 18.2,16.9" fill="none" stroke="#F0C87E" stroke-width="1.9" stroke-linecap="round"/>
+</svg><span class="tag">на тёмном фоне · 34 px</span></div></div></section></body></html>

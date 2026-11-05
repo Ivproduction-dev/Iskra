@@ -1,8 +1,8 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $xamlPath = Join-Path $projectRoot 'IskraStudio\MainWindow.xaml'
-[xml]$xaml = Get-Content -LiteralPath $xamlPath -Raw
+[xml]$xaml = Get-Content -LiteralPath $xamlPath -Raw -Encoding UTF8
 $namespaces = [System.Xml.XmlNamespaceManager]::new($xaml.NameTable)
 $namespaces.AddNamespace('w', 'http://schemas.microsoft.com/winfx/2006/xaml/presentation')
 $namespaces.AddNamespace('x', 'http://schemas.microsoft.com/winfx/2006/xaml')
@@ -28,19 +28,19 @@ if ($null -eq $badge -or $badge.GetAttribute('Grid.Row', '') -ne '1') {
     throw 'The diagnostics badge must sit in the workspace row, clear of the toolbar.'
 }
 
-$runtimeCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.Runtime.cs') -Raw
+$runtimeCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.Runtime.cs') -Raw -Encoding UTF8
 if ($runtimeCode -notmatch 'Panel\.SetZIndex\(WorkspaceView, modalVisible \? 30 : 0\)') {
     throw 'Modal runtime and diagnostics overlays must cover the floating action buttons.'
 }
 
 Write-Output 'Passed: overlays span the workspace, the badge clears the toolbar, and modal overlays cover floating buttons.'
 
-$detailCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.ObjectDetail.cs') -Raw
+$detailCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.ObjectDetail.cs') -Raw -Encoding UTF8
 if ($detailCode -match 'var floatingAdd = new Button' -or $detailCode -notmatch 'CreateProjectButton\.Visibility = detailTab == ObjectDetailTab\.Scripts \? Visibility\.Collapsed : Visibility\.Visible') {
     throw 'Object asset addition must use the shared floating action group.'
 }
 
-$mainWindowCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.xaml.cs') -Raw
+$mainWindowCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.xaml.cs') -Raw -Encoding UTF8
 if ($mainWindowCode -notmatch 'if \(showingDetail\)\s*\{\s*AddToCurrentDetail\(\);\s*return;') {
     throw 'The shared plus button must route to the active object resource action.'
 }
@@ -54,7 +54,7 @@ foreach ($name in 'CreateProjectOverlay', 'EntityDialogOverlay', 'RenameConfirmO
     }
 }
 
-$sceneEditorCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.SceneEditor.cs') -Raw
+$sceneEditorCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.SceneEditor.cs') -Raw -Encoding UTF8
 if ($sceneEditorCode -notmatch 'Style = \(Style\)FindResource\("ProjectCardButton"\)' -or
     $sceneEditorCode -notmatch 'AutomationProperties\.SetName\(openButton, automationName\)' -or
     $sceneEditorCode -notmatch 'TextTrimming = TextTrimming\.CharacterEllipsis' -or

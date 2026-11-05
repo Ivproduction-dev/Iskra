@@ -1,8 +1,10 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$runtimePath = Join-Path $projectRoot 'IskraStudio\ProjectRuntime.cs'
-$runtimeCode = Get-Content -LiteralPath $runtimePath -Raw
+$runtimePath = Join-Path $projectRoot 'Iskra.Core\ScriptCompiler.cs'
+$runPath = Join-Path $projectRoot 'Iskra.Core\ScriptEngine.cs'
+$runtimeCode = Get-Content -LiteralPath $runtimePath -Raw -Encoding UTF8
+$runCode = Get-Content -LiteralPath $runPath -Raw -Encoding UTF8
 $patternMatch = [regex]::Match($runtimeCode, 'private static readonly Regex AudioPattern = new\(\s*"(?<pattern>[^"]+)"')
 if (-not $patternMatch.Success) {
     throw 'Could not find the production sound-command pattern.'
@@ -18,14 +20,14 @@ if (-not $waiting.Success -or -not $waiting.Groups['wait'].Success -or $waiting.
     throw 'Waiting playback must accept a cross-object sound reference.'
 }
 
-if ($runtimeCode -notmatch 'case "play-sound"\s*:\s*case "play-sound-wait"' -or
-    $runtimeCode -notmatch 'await ended\.Task\.WaitAsync\(cancellationToken\)') {
+if ($runCode -notmatch 'case "play-sound"\s*:\s*case "play-sound-wait"' -or
+    $runCode -notmatch 'await sound\.Completion\.WaitAsync\(token\)') {
     throw 'Both sound commands must run, and the waiting command must pause until playback completes.'
 }
 
 Write-Output 'Passed: ordinary and waiting sound commands parse and use their distinct playback behavior.'
 
-$objectDetailCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.ObjectDetail.cs') -Raw
+$objectDetailCode = Get-Content -LiteralPath (Join-Path $projectRoot 'IskraStudio\MainWindow.ObjectDetail.cs') -Raw -Encoding UTF8
 if ($objectDetailCode -notmatch 'e\.ClickCount != 2' -or
     $objectDetailCode -notmatch 'Clipboard\.SetText\(Path\.GetFileName\(path\)\)') {
     throw 'Double-clicking a sound name must copy only its filename.'

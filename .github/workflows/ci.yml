@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet test tests/IskraStudio.Tests.csproj -c Release --nologo
+      - shell: pwsh
+        run: |
+          ./tests/diagnostics_background_navigation_test.ps1
+          ./tests/runtime_overlay_layout_test.ps1
+          ./tests/sound_command_syntax_test.ps1
+
+  android:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet workload install maui-android
+      - run: dotnet build Iskra.Android/Iskra.Android.csproj -c Release -f net10.0-android --nologo

@@ -95,6 +95,11 @@ internal static class ConditionalDirectiveParser
         else if (PressEvent.IsMatch(line)) eventKind = "press";
         else if (ReleaseEvent.IsMatch(line)) eventKind = "release";
         else if (HoverEvent.IsMatch(line)) eventKind = "hover";
+        else if (RuntimeFeatureSyntax.TryParseSoundEvent(line, out var soundFile))
+        {
+            eventKind = "sound-ended";
+            eventArgument = soundFile;
+        }
         else if (ScriptCommandSyntax.TryParseKeyboardEvent(line, out _, out var keyId) && keyId.Length > 0)
         {
             eventKind = "key";
@@ -200,9 +205,7 @@ internal static class ConditionalDirectiveParser
 
     private static string ResolveOperand(string value, IReadOnlyDictionary<string, string> variables)
     {
-        if (value.Length >= 2 && value[0] == '"' && value[^1] == '"') return value[1..^1];
-        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _)) return value;
-        return ResolveVariable(value, variables);
+        return RuntimeValueResolver.ResolveValue(value, variables);
     }
 
     internal static string ResolveVariable(string name, IReadOnlyDictionary<string, string> variables)
@@ -240,7 +243,9 @@ internal static class ConditionalDirectiveParser
                             ? RuntimeObjectProperties.SizeProperty
                             : name.Equals(RuntimeObjectProperties.TransparencyProperty, StringComparison.OrdinalIgnoreCase)
                                 ? RuntimeObjectProperties.TransparencyProperty
-                                : name;
+                                : name.Equals(RuntimeObjectProperties.DirectionProperty, StringComparison.OrdinalIgnoreCase)
+                                    ? RuntimeObjectProperties.DirectionProperty
+                                    : name;
         return NormalizeBooleanValue(variables.GetValueOrDefault(key, variables.GetValueOrDefault(name, name)));
     }
 
@@ -332,7 +337,7 @@ internal static class ConditionalDirectiveParser
         private ConditionNode ParseOperand()
         {
             if (position >= tokens.Count) throw new FormatException("Не хватает значения.");
-            if (tokens[position] == "(")
+            if (tokens[position] == "(" && !StartsArithmeticGroup())
             {
                 position++;
                 var nested = ParseOr();
@@ -340,7 +345,29 @@ internal static class ConditionalDirectiveParser
                 position++;
                 return new GroupNode(nested);
             }
-            var token = tokens[position++];
+            var valueTokens = new List<string>();
+            var depth = 0;
+            while (position < tokens.Count)
+            {
+                var expressionToken = tokens[position];
+                if (depth == 0 && (expressionToken == ")" || IsComparison(expressionToken) || IsLogicalOperator(expressionToken))) break;
+                if (expressionToken == "(") depth++;
+                else if (expressionToken == ")") depth--;
+                valueTokens.Add(expressionToken);
+                position++;
+            }
+            if (valueTokens.Count == 0) throw new FormatException("Ожидалось значение.");
+            if (valueTokens.Any(valueToken => valueToken.Equals("and", StringComparison.OrdinalIgnoreCase) ||
+                    valueToken.Equals("or", StringComparison.OrdinalIgnoreCase) ||
+                    valueToken.Equals("not", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new FormatException("Логические операторы записываются по-русски: «и», «или», «не».");
+            }
+            if (valueTokens.Count > 1 && !valueTokens.Any(IsMathOperator) && !valueTokens.Any(ContainsMathOperator))
+            {
+                throw new FormatException("Лишняя часть значения.");
+            }
+            var token = string.Join(" ", valueTokens);
             if (token is ")" or "=" or "==" or "!=" or "<>" or ">" or "<" or ">=" or "<=" ||
                 string.Equals(token, "и", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(token, "или", StringComparison.OrdinalIgnoreCase) ||
@@ -348,6 +375,40 @@ internal static class ConditionalDirectiveParser
                 throw new FormatException("Ожидалось значение.");
             return new ValueNode(token);
         }
+
+        private bool StartsArithmeticGroup()
+        {
+            var closingIndex = FindClosingParenthesis(position);
+            if (closingIndex < 0) return false;
+            for (var index = position + 1; index < closingIndex; index++)
+            {
+                if (IsComparison(tokens[index]) || IsLogicalOperator(tokens[index])) continue;
+                if (IsMathOperator(tokens[index]) || ContainsMathOperator(tokens[index])) return true;
+            }
+            return closingIndex + 1 < tokens.Count &&
+                (IsComparison(tokens[closingIndex + 1]) || IsMathOperator(tokens[closingIndex + 1]));
+        }
+
+        private int FindClosingParenthesis(int openingIndex)
+        {
+            var depth = 0;
+            for (var index = openingIndex; index < tokens.Count; index++)
+            {
+                if (tokens[index] == "(") depth++;
+                else if (tokens[index] == ")" && --depth == 0) return index;
+            }
+            return -1;
+        }
+
+        private static bool IsLogicalOperator(string token) =>
+            string.Equals(token, "и", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(token, "или", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsMathOperator(string token) => token is "+" or "-" or "*" or "/";
+
+        private static bool ContainsMathOperator(string token) =>
+            token.Contains('+') || token.Contains('*') || token.Contains('/') ||
+            token.IndexOf('-', StringComparison.Ordinal) > 0;
 
         private bool TakeWord(string word)
         {
@@ -541,6 +602,7 @@ internal sealed class RuntimeObjectProperties
     public const string YProperty = "Свойство.у";
     public const string SizeProperty = "Свойство.размер";
     public const string TransparencyProperty = "Свойство.прозрачность";
+    public const string DirectionProperty = "Свойство.направление";
     public const string TouchedObjectPropertyPrefix = "Свойство.коснулся.";
     public const string KeyboardKeyPropertyPrefix = "Свойство.клавиша.";
 
@@ -551,7 +613,8 @@ internal sealed class RuntimeObjectProperties
         [XProperty] = "0",
         [YProperty] = "0",
         [SizeProperty] = "100",
-        [TransparencyProperty] = "0"
+        [TransparencyProperty] = "0",
+        [DirectionProperty] = "0"
     };
 
     public IReadOnlyDictionary<string, string> Values => values;
@@ -576,6 +639,7 @@ internal sealed class RuntimeObjectProperties
 
     public bool SetSize(double percent) => SetNumber(SizeProperty, percent);
     public bool SetTransparency(double percent) => SetNumber(TransparencyProperty, percent);
+    public bool SetDirection(double degrees) => SetNumber(DirectionProperty, degrees);
 
     private bool Set(string property, bool value) => SetValue(property, value ? "истина" : "ложь");
 

@@ -19,7 +19,7 @@ public partial class MainWindow : Window
         Options
     }
 
-    private readonly ProjectStore projectStore = new();
+    private readonly ProjectStore projectStore;
     private readonly ProjectContentStore projectContentStore;
     private readonly ProjectArchiveService archiveService;
     private readonly AppSettingsStore appSettingsStore = new();
@@ -36,6 +36,12 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        projectStore = new ProjectStore(
+            AppPaths.DataDirectory,
+            directory => Microsoft.VisualBasic.FileIO.FileSystem.DeleteDirectory(
+                directory,
+                Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+                Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin));
         RuntimeDebugHost.Content = runtimeDebugPanel;
         PreviewKeyDown += (_, e) =>
         {
@@ -425,6 +431,7 @@ public partial class MainWindow : Window
         RecentProjectButton.Tag = recentProject;
         RecentProjectName.Text = recentProject?.Name ?? string.Empty;
         RecentProjectName.ToolTip = recentProject?.Name;
+        RecentProjectMeta.Text = recentProject is null ? "Открыть проект" : $"{recentProject.MetaSummary}  ·  Открыть проект";
     }
 
     private void ProjectRow_Click(object sender, RoutedEventArgs e)
@@ -509,6 +516,114 @@ public partial class MainWindow : Window
         SettingsView.Visibility = Visibility.Collapsed;
     }
 
+    private void UpdateBreadcrumbs(string? currentTitle = null)
+    {
+        if (WorkspaceBreadcrumbsHost is null)
+        {
+            return;
+        }
+
+        if (currentTitle is not null)
+        {
+            WorkspaceTitle.Text = currentTitle;
+        }
+
+        WorkspaceBreadcrumbsHost.Children.Clear();
+
+        if (showingPainting)
+        {
+            if (detailScene is not null)
+            {
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbButton(detailScene.Name, () =>
+                {
+                    if (paintingDirty)
+                    {
+                        SavePainting();
+                        return;
+                    }
+                    showingPainting = false;
+                    ShowObjectListPage(detailScene);
+                }));
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbSeparator());
+            }
+
+            if (detailItem is not null && detailScene is not null)
+            {
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbButton(detailItem.Name, () =>
+                {
+                    if (paintingDirty)
+                    {
+                        SavePainting();
+                        return;
+                    }
+                    showingPainting = false;
+                    ShowObjectDetail(detailScene, detailItem, ObjectDetailTab.Images);
+                }));
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbSeparator());
+            }
+
+            WorkspaceBreadcrumbsHost.Children.Add(WorkspaceTitle);
+            return;
+        }
+
+        if (showingDetail && detailScene is not null)
+        {
+            if (activeProject is not null)
+            {
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbButton("Сцены", ShowSceneListPage));
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbSeparator());
+            }
+
+            WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbButton(detailScene.Name, () => ShowObjectListPage(detailScene)));
+            WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbSeparator());
+            WorkspaceBreadcrumbsHost.Children.Add(WorkspaceTitle);
+            return;
+        }
+
+        if (showingObjects && activeScene is not null)
+        {
+            if (activeProject is not null)
+            {
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbButton("Сцены", ShowSceneListPage));
+                WorkspaceBreadcrumbsHost.Children.Add(CreateBreadcrumbSeparator());
+            }
+
+            WorkspaceBreadcrumbsHost.Children.Add(WorkspaceTitle);
+            return;
+        }
+
+        WorkspaceBreadcrumbsHost.Children.Add(WorkspaceTitle);
+    }
+
+    private Button CreateBreadcrumbButton(string text, Action onClick)
+    {
+        var button = new Button
+        {
+            Style = (Style)FindResource("ToolButton"),
+            Content = text,
+            Padding = new Thickness(6, 3, 6, 3),
+            FontSize = 13,
+            Foreground = BrushFor("MutedBrush"),
+            VerticalAlignment = VerticalAlignment.Center,
+            Cursor = Cursors.Hand
+        };
+        button.Click += (_, _) => onClick();
+        System.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(button, true);
+        return button;
+    }
+
+    private TextBlock CreateBreadcrumbSeparator()
+    {
+        return new TextBlock
+        {
+            Text = "›",
+            FontSize = 13,
+            Foreground = BrushFor("MutedBrush"),
+            Margin = new Thickness(3, 0, 3, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+    }
+
     private void Help_Click(object sender, RoutedEventArgs e)
     {
         AppMenuPopup.IsOpen = false;
@@ -520,7 +635,7 @@ public partial class MainWindow : Window
     {
         AppMenuPopup.IsOpen = false;
         WorkspaceToolsPopup.IsOpen = false;
-        MessageBox.Show(this, "Искра Студио\nСреда для создания интерактивных проектов.", "О программе", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(this, "Искра Студио\nСреда для создания интерактивных проектов.\n\n© 2026 Ivproduction-dev\nЛицензия MIT", "О программе", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void OpenLog_Click(object sender, RoutedEventArgs e)

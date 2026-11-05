@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
@@ -29,6 +29,9 @@ public partial class MainWindow
     {
         Rectangle,
         Ellipse,
+        Triangle,
+        Heart,
+        Star,
         Line
     }
 
@@ -294,19 +297,21 @@ public partial class MainWindow
             }
             try
             {
+                var family = GetCustomFontFamilyName(dialog.FileName);
+                if (family is null)
+                {
+                    MessageBox.Show(this, "Файл не является поддерживаемым шрифтом .ttf или .otf.", "Искра Студио", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
                 Directory.CreateDirectory(directory);
                 var destination = FreeFilePath(directory, SafeFileName(dialog.FileName));
                 File.Copy(dialog.FileName, destination);
                 RebuildPaintFontList(list, overlay);
-                var family = GetCustomFontFamilyName(destination);
-                if (family is not null)
-                {
-                    paintFontFile = destination;
-                    paintFontName = family;
-                    paintTextSeed = paintRandom.Next();
-                    RefreshPaintFontButton();
-                    InvalidatePaintText();
-                }
+                paintFontFile = destination;
+                paintFontName = family;
+                paintTextSeed = paintRandom.Next();
+                RefreshPaintFontButton();
+                InvalidatePaintText();
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
@@ -407,6 +412,7 @@ public partial class MainWindow
                 paintFontFile = null;
                 paintFontName = displayName;
             }
+            SavePaintFontSetting(paintFontFile);
             paintTextSeed = paintRandom.Next();
             RefreshPaintFontButton();
             InvalidatePaintText();
@@ -778,6 +784,9 @@ public partial class MainWindow
 
     private void BlitPaintTextAt(int[] destination, (int[] Pixels, int Width, int Height) rendered, int left, int top)
     {
+        var scaledWidth = (int)(rendered.Width * paintTextScaleX);
+        var scaledHeight = (int)(rendered.Height * paintTextScaleY);
+        TrackPaintDirty(left, top, left + scaledWidth, top + scaledHeight);
         if (Math.Abs(paintTextRotation) < 0.001)
         {
             BlitPaintTextScaled(destination, paintWidth, paintHeight, rendered.Pixels, rendered.Width, rendered.Height,
@@ -817,6 +826,18 @@ public partial class MainWindow
         {
             DrawPaintTextPreview();
         }
+    }
+
+    private void DiscardPaintTextPreview()
+    {
+        if (paintTextBase is null)
+        {
+            return;
+        }
+        paintPixels = (int[])paintTextBase.Clone();
+        paintTextBase = null;
+        UploadPaintPixels();
+        UpdatePaintChrome();
     }
 
     private void CommitPaintTextPreview()
@@ -967,6 +988,8 @@ public partial class MainWindow
         paintTextScaleY = 1;
         paintTextBase = null;
         paintTextFloatCard = null;
+        paintFontFile = SavedPaintFontPath();
+        paintFontName = paintFontFile is not null ? GetCustomFontFamilyName(paintFontFile) ?? paintFontName : "Segoe UI";
         paintFrameAction = PaintFrameAction.None;
         paintZoom = 1;
         paintFitted = false;
@@ -976,6 +999,7 @@ public partial class MainWindow
 
         showingPainting = true;
         WorkspaceTitle.Text = "Рисовалка";
+        UpdateBreadcrumbs();
         WorkspaceBackButton.Content = CreateIconContent("arrowleft", item.Name);
         WorkspaceMenuButton.Visibility = Visibility.Collapsed;
         WorkspaceConfirmSelectionButton.Visibility = Visibility.Collapsed;
@@ -992,9 +1016,60 @@ public partial class MainWindow
         Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, new Action(FitPaintToView));
     }
 
+    private void SavePaintFontSetting(string? file)
+    {
+        if (activeProject is null || paintingScene is null || paintingItem is null) return;
+        var name = file is null ? string.Empty : Path.GetFileName(file);
+        _ = projectContentStore.SetObjectSetting(activeProject, paintingScene, paintingItem, "Шрифт", name);
+    }
+
+    private string? SavedPaintFontPath()
+    {
+        if (activeProject is null || paintingScene is null || paintingItem is null) return null;
+        var name = projectContentStore.GetObjectSetting(activeProject, paintingScene, paintingItem, "Шрифт");
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        var directory = PaintFontsDirectory();
+        if (string.IsNullOrEmpty(directory)) return null;
+        var path = Path.Combine(directory, name);
+        return File.Exists(path) ? path : null;
+    }
+
     private void UploadPaintPixels()
     {
-        paintBitmap?.WritePixels(new Int32Rect(0, 0, paintWidth, paintHeight), paintPixels, paintWidth * 4, 0);
+        if (paintBitmap is null) return;
+        if (paintDirtyRect is { } dirty && dirty.Width > 0 && dirty.Height > 0)
+        {
+            paintBitmap.WritePixels(dirty, paintPixels, paintWidth * 4, dirty.Y * paintWidth + dirty.X);
+            paintDirtyRect = null;
+            return;
+        }
+        paintBitmap.WritePixels(new Int32Rect(0, 0, paintWidth, paintHeight), paintPixels, paintWidth * 4, 0);
+    }
+
+    private Int32Rect? paintDirtyRect;
+
+    private void TrackPaintDirty(int x, int y)
+    {
+        TrackPaintDirty(x, y, x, y);
+    }
+
+    private void TrackPaintDirty(int x0, int y0, int x1, int y1)
+    {
+        if (paintWidth <= 0 || paintHeight <= 0) return;
+        var left = Math.Clamp(Math.Min(x0, x1), 0, paintWidth - 1);
+        var top = Math.Clamp(Math.Min(y0, y1), 0, paintHeight - 1);
+        var right = Math.Clamp(Math.Max(x0, x1), 0, paintWidth - 1);
+        var bottom = Math.Clamp(Math.Max(y0, y1), 0, paintHeight - 1);
+        if (paintDirtyRect is { } current)
+        {
+            var minX = Math.Min(current.X, left);
+            var minY = Math.Min(current.Y, top);
+            var maxX = Math.Max(current.X + current.Width - 1, right);
+            var maxY = Math.Max(current.Y + current.Height - 1, bottom);
+            paintDirtyRect = new Int32Rect(minX, minY, maxX - minX + 1, maxY - minY + 1);
+            return;
+        }
+        paintDirtyRect = new Int32Rect(left, top, right - left + 1, bottom - top + 1);
     }
 
     private void BuildPaintScreen()
@@ -1115,26 +1190,25 @@ public partial class MainWindow
         railContent.Children.Add(paintToolsPanel);
         railContent.Children.Add(new Border
         {
-            Width = 32,
             Height = 1,
             Background = BrushFor("HairlineBrush"),
-            Margin = new Thickness(0, 6, 0, 8),
-            HorizontalAlignment = HorizontalAlignment.Center
+            Margin = new Thickness(7, 5, 7, 5)
         });
 
         paintRailColorSwatch = new Border
         {
-            Width = 34,
-            Height = 34,
-            CornerRadius = new CornerRadius(17),
+            Width = 32,
+            Height = 32,
+            CornerRadius = new CornerRadius(16),
             Background = new SolidColorBrush(paintColor),
             BorderBrush = BrushFor("AccentBrush"),
-            BorderThickness = new Thickness(2.5),
-            HorizontalAlignment = HorizontalAlignment.Center
+            BorderThickness = new Thickness(2)
         };
         var railSwatchBtn = new Button
         {
             Style = (Style)FindResource("ToolButton"),
+            Width = 44,
+            Height = 44,
             Padding = new Thickness(0),
             Content = paintRailColorSwatch,
             ToolTip = "Выбор цвета (кликните для палитры)"
@@ -1144,12 +1218,17 @@ public partial class MainWindow
 
         var leftRail = new Border
         {
-            Width = 56,
+            Width = 60,
             Background = BrushFor("PanelBrush"),
             BorderBrush = BrushFor("HairlineBrush"),
             BorderThickness = new Thickness(0, 0, 1, 0),
             Padding = new Thickness(4, 6, 4, 8),
-            Child = railContent
+            Child = new ScrollViewer
+            {
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                Content = railContent
+            }
         };
         DockPanel.SetDock(leftRail, Dock.Left);
         layout.Children.Add(leftRail);
@@ -1898,6 +1977,38 @@ public partial class MainWindow
             new(shapeFrameX + lx * c - ly * s, shapeFrameY + lx * s + ly * c);
     }
 
+    private Point[] ShapeFrameWorldPoints()
+    {
+        var halfW = shapeFrameWidth / 2.0;
+        var halfH = shapeFrameHeight / 2.0;
+        var localPoints = paintShape switch
+        {
+            PaintShape.Triangle => new[] { new Point(0, -halfH), new Point(halfW, halfH), new Point(-halfW, halfH) },
+            PaintShape.Heart => Enumerable.Range(0, 80).Select(index =>
+            {
+                var angle = index * Math.PI * 2 / 80;
+                var sin = Math.Sin(angle);
+                var x = 16 * sin * sin * sin;
+                var y = 13 * Math.Cos(angle) - 5 * Math.Cos(2 * angle) - 2 * Math.Cos(3 * angle) - Math.Cos(4 * angle);
+                return new Point(x / 16 * halfW, -y / 17 * halfH);
+            }).ToArray(),
+            PaintShape.Star => Enumerable.Range(0, 10).Select(index =>
+            {
+                var angle = -Math.PI / 2 + index * Math.PI / 5;
+                var radius = index % 2 == 0 ? 1.0 : 0.43;
+                return new Point(Math.Cos(angle) * halfW * radius, Math.Sin(angle) * halfH * radius);
+            }).ToArray(),
+            _ => new[] { new Point(-halfW, -halfH), new Point(halfW, -halfH), new Point(halfW, halfH), new Point(-halfW, halfH) }
+        };
+
+        var radians = shapeFrameRotation * Math.PI / 180;
+        var cos = Math.Cos(radians);
+        var sin = Math.Sin(radians);
+        return localPoints.Select(point => new Point(
+            shapeFrameX + point.X * cos - point.Y * sin,
+            shapeFrameY + point.X * sin + point.Y * cos)).ToArray();
+    }
+
     private Point ShapeFrameEdgeMid(int edge)
     {
         var corners = ShapeFrameCorners();
@@ -1988,7 +2099,7 @@ public partial class MainWindow
         }
         if (paintShapePreviewPolygon is not null)
         {
-            paintShapePreviewPolygon.Visibility = showShape && paintShape == PaintShape.Rectangle ? Visibility.Visible : Visibility.Collapsed;
+            paintShapePreviewPolygon.Visibility = showShape && paintShape != PaintShape.Ellipse ? Visibility.Visible : Visibility.Collapsed;
         }
         if (paintShapePreviewPath is not null)
         {
@@ -2040,9 +2151,9 @@ public partial class MainWindow
             : Brushes.Transparent;
         var strokeThick = paintShapeFilled ? 0 : Math.Max(1.0, paintSize * paintZoom);
 
-        if (paintShape == PaintShape.Rectangle && paintShapePreviewPolygon is not null)
+        if (paintShape != PaintShape.Ellipse && paintShapePreviewPolygon is not null)
         {
-            paintShapePreviewPolygon.Points = collection;
+            paintShapePreviewPolygon.Points = new PointCollection(ShapeFrameWorldPoints().Select(PaintToScreen));
             paintShapePreviewPolygon.Fill = fillBrush;
             paintShapePreviewPolygon.Stroke = strokeBrush;
             paintShapePreviewPolygon.StrokeThickness = strokeThick;
@@ -2225,9 +2336,28 @@ public partial class MainWindow
         var sin = Math.Sin(radians);
         var halfW = shapeFrameWidth / 2;
         var halfH = shapeFrameHeight / 2;
+        TrackPaintDirty(
+            (int)(shapeFrameX - Math.Abs(halfW * cos) - Math.Abs(halfH * sin) - 2),
+            (int)(shapeFrameY - Math.Abs(halfW * sin) - Math.Abs(halfH * cos) - 2),
+            (int)(shapeFrameX + Math.Abs(halfW * cos) + Math.Abs(halfH * sin) + 2),
+            (int)(shapeFrameY + Math.Abs(halfW * sin) + Math.Abs(halfH * cos) + 2));
 
         Point Rotate(double lx, double ly) =>
             new(shapeFrameX + lx * cos - ly * sin, shapeFrameY + lx * sin + ly * cos);
+
+        if (paintShape is PaintShape.Triangle or PaintShape.Heart or PaintShape.Star)
+        {
+            var points = ShapeFrameWorldPoints();
+            if (filled)
+            {
+                FillPaintPolygon(buffer, points);
+            }
+            else
+            {
+                DrawPaintPolygonOutline(buffer, points);
+            }
+            return;
+        }
 
         if (paintShape == PaintShape.Ellipse && filled)
         {
@@ -2306,6 +2436,59 @@ public partial class MainWindow
         }
     }
 
+    private void FillPaintPolygon(int[] buffer, Point[] points)
+    {
+        var minY = Math.Max(0, (int)Math.Floor(points.Min(point => point.Y)));
+        var maxY = Math.Min(paintHeight - 1, (int)Math.Ceiling(points.Max(point => point.Y)));
+        var minX = Math.Max(0, (int)Math.Floor(points.Min(point => point.X)));
+        var maxX = Math.Min(paintWidth - 1, (int)Math.Ceiling(points.Max(point => point.X)));
+        TrackPaintDirty(minX, minY, maxX, maxY);
+
+        for (var y = minY; y <= maxY; y++)
+        {
+            var scanY = y + 0.5;
+            var intersections = new List<double>(points.Length);
+            for (var edge = 0; edge < points.Length; edge++)
+            {
+                var start = points[edge];
+                var end = points[(edge + 1) % points.Length];
+                if ((start.Y > scanY) != (end.Y > scanY))
+                {
+                    intersections.Add(start.X + (scanY - start.Y) * (end.X - start.X) / (end.Y - start.Y));
+                }
+            }
+
+            intersections.Sort();
+            for (var pair = 0; pair + 1 < intersections.Count; pair += 2)
+            {
+                var firstX = Math.Max(0, (int)Math.Ceiling(intersections[pair] - 0.5));
+                var lastX = Math.Min(paintWidth - 1, (int)Math.Floor(intersections[pair + 1] - 0.5));
+                for (var x = firstX; x <= lastX; x++)
+                {
+                    var index = y * paintWidth + x;
+                    buffer[index] = BlendPixel(buffer[index], paintColor);
+                }
+            }
+        }
+    }
+
+    private void DrawPaintPolygonOutline(int[] buffer, Point[] points)
+    {
+        for (var edge = 0; edge < points.Length; edge++)
+        {
+            var start = points[edge];
+            var end = points[(edge + 1) % points.Length];
+            var steps = Math.Max(1, (int)Math.Ceiling(Math.Max(Math.Abs(end.X - start.X), Math.Abs(end.Y - start.Y))));
+            for (var step = 0; step <= steps; step++)
+            {
+                var amount = (double)step / steps;
+                StampOnto(buffer,
+                    (int)Math.Round(start.X + (end.X - start.X) * amount),
+                    (int)Math.Round(start.Y + (end.Y - start.Y) * amount));
+            }
+        }
+    }
+
     private void StampPaintShape()
     {
         PushShapeUndoSnapshot();
@@ -2378,15 +2561,30 @@ public partial class MainWindow
             return;
         }
         paintToolsPanel.Children.Clear();
-        AddPaintToolButton(PaintTool.Brush, "brush", "Кисть (B)");
-        AddPaintToolButton(PaintTool.Spray, "spray", "Спрей (S)");
-        AddPaintToolButton(PaintTool.Eraser, "eraser", "Ластик (E)");
-        AddPaintToolButton(PaintTool.Fill, "fillbucket", "Заливка (G)");
-        AddPaintToolButton(PaintTool.Pipette, "pipette", "Пипетка (I)");
-        AddPaintToolButton(PaintTool.Shape, "shape", "Фигура (U)");
-        AddPaintToolButton(PaintTool.Line, "line", "Линия (L)");
-        AddPaintToolButton(PaintTool.Text, "text", "Текст (T)");
-        AddPaintToolButton(PaintTool.Hand, "handmove", "Рука (H)");
+        AddPaintToolButton(PaintTool.Brush, "Brush", "Кисть", "B");
+        AddPaintToolButton(PaintTool.Spray, "Spray", "Спрей", "S");
+        AddPaintToolButton(PaintTool.Eraser, "Eraser", "Ластик", "E");
+        AddPaintToolDivider();
+        AddPaintToolButton(PaintTool.Fill, "Fill", "Заливка", "G");
+        AddPaintToolButton(PaintTool.Pipette, "Pipette", "Пипетка", "I");
+        AddPaintToolDivider();
+        AddPaintToolButton(PaintTool.Shape, "Shape", "Фигура", "U");
+        AddPaintToolButton(PaintTool.Line, "Line", "Линия", "L");
+        AddPaintToolButton(PaintTool.Text, "Text", "Текст", "T");
+        AddPaintToolDivider();
+        AddPaintToolButton(PaintTool.Hand, "Move", "Перемещение", "H");
+    }
+
+    private void AddPaintToolDivider()
+    {
+        paintToolsPanel!.Children.Add(new Border
+        {
+            Width = 30,
+            Height = 1,
+            Background = BrushFor("HairlineBrush"),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 4, 0, 4)
+        });
     }
 
     private void SelectPaintTool(PaintTool tool)
@@ -2400,7 +2598,7 @@ public partial class MainWindow
         paintTool = tool;
         if (leaving == PaintTool.Text && tool != PaintTool.Text)
         {
-            CommitPaintTextPreview();
+            DiscardPaintTextPreview();
         }
         if (tool == PaintTool.Text)
         {
@@ -2441,12 +2639,12 @@ public partial class MainWindow
             {
                 if (!paintShapeStamped)
                 {
-                    PushShapeUndoSnapshot();
+                    paintPixels = (int[])paintShapeBase.Clone();
+                    UploadPaintPixels();
                 }
                 paintShapeStamped = false;
                 paintShapeBase = null;
                 shapeFrameActive = false;
-                paintingDirty = true;
             }
             else if (tool == PaintTool.Line)
             {
@@ -2648,7 +2846,7 @@ public partial class MainWindow
         return slider;
     }
 
-    private void AddPaintToolButton(PaintTool tool, string icon, string label)
+    private void AddPaintToolButton(PaintTool tool, string icon, string label, string shortcut)
     {
         var selected = paintTool == tool;
         var button = new Button
@@ -2657,16 +2855,24 @@ public partial class MainWindow
             Width = 44,
             Height = 44,
             Padding = new Thickness(0),
-            Margin = new Thickness(0, 2, 0, 2),
-            ToolTip = label,
-            Background = selected ? BrushFor("SelectedBrush") : Brushes.Transparent,
+            Margin = new Thickness(0, 1, 0, 1),
+            ToolTip = $"{label} ({shortcut})",
+            Background = selected ? BrushFor("AccentSoftBrush") : Brushes.Transparent,
             BorderBrush = selected ? BrushFor("AccentBrush") : Brushes.Transparent,
-            BorderThickness = new Thickness(selected ? 1.5 : 0)
+            BorderThickness = new Thickness(selected ? 1 : 0)
         };
-        var iconElement = CreateSheetIcon(icon, 22);
+        var iconElement = new Image
+        {
+            Source = TryFindResource("PaintIcon." + icon) as System.Windows.Media.ImageSource,
+            Width = 24,
+            Height = 24,
+            Stretch = Stretch.Uniform,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center
+        };
         button.Content = iconElement;
         button.Click += (_, _) => SelectPaintTool(tool);
-        AutomationProperties.SetName(button, label);
+        AutomationProperties.SetName(button, $"{label}, клавиша {shortcut}");
         paintToolsPanel!.Children.Add(button);
     }
 
@@ -2759,8 +2965,11 @@ public partial class MainWindow
                 paintOptionsPanel.Children.Add(CreateToolBadge("shape", "Фигура"));
                 paintOptionsPanel.Children.Add(CreateOptionSeparator());
                 paintShapeRow = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-                AddPaintShapeButton(PaintShape.Rectangle, "shape", "Прямоугольник");
-                AddPaintShapeButton(PaintShape.Ellipse, "ellipse", "Эллипс");
+                AddPaintShapeButton(PaintShape.Rectangle, "Rectangle", "Прямоугольник");
+                AddPaintShapeButton(PaintShape.Ellipse, "Circle", "Круг");
+                AddPaintShapeButton(PaintShape.Triangle, "Triangle", "Треугольник");
+                AddPaintShapeButton(PaintShape.Heart, "Heart", "Сердце");
+                AddPaintShapeButton(PaintShape.Star, "Star", "Звезда");
                 paintOptionsPanel.Children.Add(paintShapeRow);
                 paintOptionsPanel.Children.Add(CreateOptionSeparator());
                 var fillCheck = new CheckBox
@@ -2846,7 +3055,7 @@ public partial class MainWindow
                 paintOptionsPanel.Children.Add(CreateColorRow());
                 break;
             default:
-                paintOptionsPanel.Children.Add(CreateToolBadge("handmove", "Рука"));
+                paintOptionsPanel.Children.Add(CreateToolBadge("handmove", "Перемещение"));
                 paintOptionsPanel.Children.Add(CreateOptionSeparator());
                 paintOptionsPanel.Children.Add(new TextBlock
                 {
@@ -2862,7 +3071,28 @@ public partial class MainWindow
     private StackPanel CreateToolBadge(string icon, string label)
     {
         var badge = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        badge.Children.Add(CreateSheetIcon(icon, 18));
+        var paintIcon = icon switch
+        {
+            "brush" => "Brush",
+            "spray" => "Spray",
+            "eraser" => "Eraser",
+            "fillbucket" => "Fill",
+            "pipette" => "Pipette",
+            "shape" => "Shape",
+            "line" => "Line",
+            "text" => "Text",
+            "handmove" => "Move",
+            _ => null
+        };
+        badge.Children.Add(paintIcon is null
+            ? CreateSheetIcon(icon, 18)
+            : new Image
+            {
+                Source = TryFindResource("PaintIcon." + paintIcon) as System.Windows.Media.ImageSource,
+                Width = 18,
+                Height = 18,
+                Stretch = Stretch.Uniform
+            });
         badge.Children.Add(new TextBlock
         {
             Text = label,
@@ -2897,17 +3127,13 @@ public partial class MainWindow
             BorderBrush = selected ? BrushFor("AccentBrush") : Brushes.Transparent,
             BorderThickness = new Thickness(selected ? 1 : 0)
         };
-        var row = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        row.Children.Add(CreateSheetIcon(icon, 16));
-        row.Children.Add(new TextBlock
+        button.Content = new Image
         {
-            Text = label,
-            FontSize = 11,
-            Foreground = BrushFor(selected ? "AccentBrush" : "BodyBrush"),
-            Margin = new Thickness(4, 0, 0, 0),
-            VerticalAlignment = VerticalAlignment.Center
-        });
-        button.Content = row;
+            Source = TryFindResource("PaintIcon." + icon) as System.Windows.Media.ImageSource,
+            Width = 16,
+            Height = 16,
+            Stretch = Stretch.Uniform
+        };
         button.Click += (_, _) =>
         {
             paintShape = shape;
@@ -3844,9 +4070,13 @@ public partial class MainWindow
         paintRedoStack.Add((int[])paintPixels.Clone());
         paintPixels = (int[])paintUndoStack[^1].Clone();
         paintUndoStack.RemoveAt(paintUndoStack.Count - 1);
+        TrackPaintDirty(0, 0, paintWidth - 1, paintHeight - 1);
         paintTextBase = null;
         paintShapeBase = null;
         paintFrameAction = PaintFrameAction.None;
+        shapeFrameActive = false;
+        paintShapeStamped = false;
+        paintTextPlaced = false;
         paintingDirty = true;
         UploadPaintPixels();
         UpdatePaintChrome();
@@ -3859,11 +4089,19 @@ public partial class MainWindow
             return;
         }
         paintUndoStack.Add((int[])paintPixels.Clone());
+        if (paintUndoStack.Count > MaxPaintUndo)
+        {
+            paintUndoStack.RemoveAt(0);
+        }
         paintPixels = (int[])paintRedoStack[^1].Clone();
         paintRedoStack.RemoveAt(paintRedoStack.Count - 1);
+        TrackPaintDirty(0, 0, paintWidth - 1, paintHeight - 1);
         paintTextBase = null;
         paintShapeBase = null;
         paintFrameAction = PaintFrameAction.None;
+        shapeFrameActive = false;
+        paintShapeStamped = false;
+        paintTextPlaced = false;
         paintingDirty = true;
         UploadPaintPixels();
         UpdatePaintChrome();
@@ -3950,6 +4188,7 @@ public partial class MainWindow
         {
             return;
         }
+        TrackPaintDirty(0, 0, paintWidth - 1, paintHeight - 1);
         var target = paintPixels[y * paintWidth + x];
         var replacement = ToPixel(paintColor);
         if (target == replacement)
@@ -4116,6 +4355,8 @@ public partial class MainWindow
 
     private void StampOnto(int[] buffer, int x, int y)
     {
+        var stampRadius = Math.Max(1, (int)Math.Round(paintSize / 2.0));
+        TrackPaintDirty(x - stampRadius, y - stampRadius, x + stampRadius, y + stampRadius);
         if (paintSize <= 1)
         {
             if (x >= 0 && y >= 0 && x < paintWidth && y < paintHeight)
@@ -4125,7 +4366,7 @@ public partial class MainWindow
             }
             return;
         }
-        var radius = Math.Max(1, (int)Math.Round(paintSize / 2.0));
+        var radius = stampRadius;
         for (var dy = -radius; dy <= radius; dy++)
         {
             for (var dx = -radius; dx <= radius; dx++)
@@ -4326,21 +4567,23 @@ public partial class MainWindow
                     break;
                 }
             default:
-                PushPaintUndo();
                 paintLastCell = new Point(x, y);
-                if (inside)
+                if (!inside)
                 {
-                    if (paintTool == PaintTool.Spray)
-                    {
-                        SprayPaintAt(x, y);
-                        StartSprayTimer();
-                    }
-                    else
-                    {
-                        StampPaint(x, y, PaintEraseActive());
-                    }
-                    UploadPaintPixels();
+                    paintStroking = false;
+                    break;
                 }
+                PushPaintUndo();
+                if (paintTool == PaintTool.Spray)
+                {
+                    SprayPaintAt(x, y);
+                    StartSprayTimer();
+                }
+                else
+                {
+                    StampPaint(x, y, PaintEraseActive());
+                }
+                UploadPaintPixels();
                 paintStroking = true;
                 paintingDirty = true;
                 paintViewport?.CaptureMouse();
@@ -4624,6 +4867,7 @@ public partial class MainWindow
         var radius = Math.Max(1.0, paintSize / 2.0);
         var count = customCount ?? Math.Max(1, (int)paintSprayDensity);
         var erase = PaintEraseActive();
+        TrackPaintDirty((int)(x - radius), (int)(y - radius), (int)(x + radius), (int)(y + radius));
 
         for (var i = 0; i < count; i++)
         {
@@ -4701,9 +4945,17 @@ public partial class MainWindow
             if (path is null)
             {
                 var directory = projectContentStore.EnsureObjectResourceDirectory(activeProject, paintingScene, paintingItem.Id, "sprites");
-                path = FreeFilePath(directory, (paintingNewFileName ?? "Рисунок") + ".png");
+                var name = Path.GetFileNameWithoutExtension(paintingNewFileName ?? "Рисунок");
+                if (name.Length == 0) name = "Рисунок";
+                path = FreeFilePath(directory, name + ".png");
             }
-            var encoder = new PngBitmapEncoder();
+            var extension = Path.GetExtension(path).ToLowerInvariant();
+            if (extension is not (".png" or ".jpg" or ".jpeg" or ".bmp" or ".gif"))
+            {
+                path = FreeFilePath(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path) + ".png");
+                paintingPath = path;
+            }
+            var encoder = CreatePaintEncoder(path);
             encoder.Frames.Add(BitmapFrame.Create(paintBitmap));
             var temporaryPath = path + ".tmp";
             try
@@ -4738,12 +4990,27 @@ public partial class MainWindow
         paintSprayTimer?.Stop();
         paintSpacePanning = false;
         Mouse.OverrideCursor = null;
+        paintUndoStack.Clear();
+        paintRedoStack.Clear();
+        paintShapeBase = null;
+        paintTextBase = null;
+        paintPixels = [];
+        paintBitmap = null;
         showingPainting = false;
         if (detailScene is not null && detailItem is not null)
         {
             ShowObjectDetail(detailScene, detailItem, ObjectDetailTab.Images);
         }
     }
+
+    private static BitmapEncoder CreatePaintEncoder(string path) =>
+        Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => new JpegBitmapEncoder { QualityLevel = 92 },
+            ".bmp" => new BmpBitmapEncoder(),
+            ".gif" => new GifBitmapEncoder(),
+            _ => new PngBitmapEncoder()
+        };
 
     private void PaintScreen_KeyDown(object sender, KeyEventArgs e)
     {
